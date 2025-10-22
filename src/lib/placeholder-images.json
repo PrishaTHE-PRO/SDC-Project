@@ -1,3 +1,89 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "img_textbook_1",
+      "imageUrl": "https://images.unsplash.com/photo-1731983568664-9c1d8a87e7a2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx0ZXh0Ym9vayUyMHN0YWNrfGVufDB8fHx8MTc2MTE3NjMxNXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "textbook stack"
+    },
+    {
+      "id": "img_bike_1",
+      "imageUrl": "https://images.unsplash.com/photo-1732024006406-2fcd7c3957e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxiaWN5Y2xlJTIwc3RyZWV0fGVufDB8fHx8MTc2MTE1ODM5MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bicycle street"
+    },
+    {
+      "id": "img_minifridge_1",
+      "imageUrl": "https://images.unsplash.com/photo-1566406921978-b6a458d7d0e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtaW5pJTIwZnJpZGdlfGVufDB8fHx8MTc2MTE3NjMxNXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mini fridge"
+    },
+    {
+      "id": "img_lamp_1",
+      "imageUrl": "https://images.unsplash.com/photo-1551380701-5dd33d5b5d06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxkZXNrJTIwbGFtcHxlbnwwfHx8fDE3NjExNDEzMDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "desk lamp"
+    },
+    {
+      "id": "img_couch_1",
+      "imageUrl": "https://images.unsplash.com/photo-1663756915436-c6842b9d3eb0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c29mYSUyMGxpdmluZ3Jvb218ZW58MHx8fHwxNzYxMDg5OTQyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sofa livingroom"
+    },
+    {
+      "id": "img_microwave_1",
+      "imageUrl": "https://images.unsplash.com/photo-1606398016782-2f49b8c03e99?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtaWNyb3dhdmUlMjBraXRjaGVufGVufDB8fHx8MTc2MTE3NjMxNXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "microwave kitchen"
+    },
+    {
+      "id": "img_monitor_1",
+      "imageUrl": "https://images.unsplash.com/flagged/photo-1551954810-43cd6aef5b1f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y29tcHV0ZXIlMjBtb25pdG9yfGVufDB8fHx8MTc2MTE3NjMxNXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "computer monitor"
+    },
+    {
+      "id": "img_chair_1",
+      "imageUrl": "https://images.unsplash.com/photo-1688578735427-994ecdea3ea4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxvZmZpY2UlMjBjaGFpcnxlbnwwfHx8fDE3NjExNTc4Mzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "office chair"
+    },
+    {
+      "id": "img_speaker_1",
+      "imageUrl": "https://images.unsplash.com/photo-1589003077984-894e133dabab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxibHVldG9vdGglMjBzcGVha2VyfGVufDB8fHx8MTc2MTA4NTc3Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bluetooth speaker"
+    },
+    {
+      "id": "img_guitar_1",
+      "imageUrl": "https://images.unsplash.com/photo-1647265194908-6815badcc397?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhY291c3RpYyUyMGd1aXRhcnxlbnwwfHx8fDE3NjExMzk0MzB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "acoustic guitar"
+    },
+    {
+      "id": "img_winter_jacket_1",
+      "imageUrl": "https://images.unsplash.com/photo-1425100599170-85ec4f00a6ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx3aW50ZXIlMjBqYWNrZXR8ZW58MHx8fHwxNzYxMTUwODY0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "winter jacket"
+    },
+    {
+      "id": "img_tv_1",
+      "imageUrl": "https://images.unsplash.com/photo-1604914417296-7a813352ae9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx0ZWxldmlzaW9uJTIwbGl2aW5ncm9vbXxlbnwwfHx8fDE3NjExNzYzMTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "television livingroom"
+    },
+    {
+      "id": "user_bucky",
+      "imageUrl": "https://images.unsplash.com/photo-1708019372074-4da65491c4b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtYXNjb3QlMjBiYWRnZXJ8ZW58MHx8fHwxNzYxMTc2MzE1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mascot badger"
+    },
+    {
+      "id": "user_jane",
+      "imageUrl": "https://images.unsplash.com/photo-1621274790572-7c32596bc67f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzdHVkZW50JTIwcG9ydHJhaXR8ZW58MHx8fHwxNzYxMTQ4MjQ4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "student portrait"
+    },
+    {
+      "id": "user_mike",
+      "imageUrl": "https://images.unsplash.com/photo-1631131428457-3c14bdcb81d4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzdHVkZW50JTIwc21pbGluZ3xlbnwwfHx8fDE3NjEwOTgzNjB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "student smiling"
+    },
+    {
+      "id": "user_sarah",
+      "imageUrl": "https://images.unsplash.com/photo-1609505848912-b7c3b8b4beda?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc2MTE0NzUzOXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "user_dave",
+      "imageUrl": "https://images.unsplash.com/photo-1656337789708-cdf37b07112d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bWFuJTIwc21pbGluZ3xlbnwwfHx8fDE3NjExMTc5NzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man smiling"
+    }
+  ]
 }
