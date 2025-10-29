@@ -1,8 +1,11 @@
+
 import { getRecommendations } from '@/ai/flows/personalized-listing-feed';
+import ListingCard from '@/components/listings/ListingCard';
 import ListingFeedClient from '@/components/listings/ListingFeedClient';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getAllListings, getAllUsers } from '@/lib/data';
 import type { ListingWithSeller } from '@/lib/types';
+import { Separator } from '@/components/ui/separator';
 
 export default async function Home() {
   const allListings = await getAllListings();
@@ -56,14 +59,65 @@ export default async function Home() {
   }
 
   const allTags = allListings.flatMap(l => l.tags);
-  const uniqueCategories = [...new Set(allTags)];
+  const allCategories = [...new Set(allTags)];
+
+  const preferredCategories = user?.preferredCategories || [];
+  const otherCategories = allCategories.filter(c => !preferredCategories.includes(c));
+
+  const listingsByPreferredCategory: { category: string, listings: ListingWithSeller[] }[] = preferredCategories.map(category => ({
+    category,
+    listings: sortedListings.filter(l => l.tags.includes(category)),
+  })).filter(group => group.listings.length > 0);
+
+  const otherListings = sortedListings.filter(listing => 
+    !listing.tags.some(tag => preferredCategories.includes(tag))
+  );
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
-      <h1 className="mb-4 font-headline text-4xl font-bold tracking-tight">
-        For You
-      </h1>
-      <ListingFeedClient listings={sortedListings} categories={uniqueCategories} />
+      {user && listingsByPreferredCategory.length > 0 ? (
+        <>
+          <ListingFeedClient listings={sortedListings} categories={[...preferredCategories, ...otherCategories]} />
+          
+          <div className="mt-8 space-y-12">
+            {listingsByPreferredCategory.map(({ category, listings }) => (
+              <div key={category}>
+                <h2 className="mb-4 font-headline text-2xl font-bold capitalize tracking-tight">
+                  {category}
+                </h2>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {listings.map((listing) => (
+                    listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {otherListings.length > 0 && (
+             <>
+              <Separator className="my-12" />
+              <div>
+                <h2 className="mb-4 font-headline text-2xl font-bold tracking-tight">
+                  More For You
+                </h2>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {otherListings.map((listing) => (
+                    listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <h1 className="mb-4 font-headline text-4xl font-bold tracking-tight">
+            For You
+          </h1>
+          <ListingFeedClient listings={sortedListings} categories={allCategories} />
+        </>
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -11,12 +12,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+
+const categories = [
+  "textbooks", "electronics", "furniture", "academics",
+  "cs", "bikes", "transportation", "sports",
+  "dorm", "appliances", "decor", "living room",
+  "apartment", "kitchen", "computers", "office",
+  "music", "audio", "hobby", "instruments",
+  "clothing", "winter"
+];
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -31,6 +43,9 @@ const formSchema = z.object({
     message: 'Password must be at least 8 characters long.',
   }),
   confirmPassword: z.string(),
+  preferredCategories: z.array(z.string()).refine(value => value.length > 0, {
+    message: 'Please select at least one category.',
+  }),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match.",
   path: ['confirmPassword'],
@@ -48,12 +63,18 @@ export function SignupForm() {
       email: '',
       password: '',
       confirmPassword: '',
+      preferredCategories: [],
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     // Mock signup logic
+    console.log("New user signup:", {
+      name: values.name,
+      email: values.email,
+      preferredCategories: values.preferredCategories
+    });
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     toast({
@@ -67,7 +88,7 @@ export function SignupForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
@@ -116,6 +137,56 @@ export function SignupForm() {
               <FormControl>
                 <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="preferredCategories"
+          render={() => (
+            <FormItem>
+              <div className="mb-4">
+                <FormLabel className="text-base">Tell us what you're interested in</FormLabel>
+                <FormDescription>
+                  Select a few categories to personalize your feed.
+                </FormDescription>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {categories.map((item) => (
+                  <FormField
+                    key={item}
+                    control={form.control}
+                    name="preferredCategories"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={item}
+                          className="flex flex-row items-start space-x-3 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(item)}
+                              onCheckedChange={(checked) => {
+                                return checked
+                                  ? field.onChange([...field.value, item])
+                                  : field.onChange(
+                                      field.value?.filter(
+                                        (value) => value !== item
+                                      )
+                                    )
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal capitalize">
+                            {item}
+                          </FormLabel>
+                        </FormItem>
+                      )
+                    }}
+                  />
+                ))}
+              </div>
               <FormMessage />
             </FormItem>
           )}

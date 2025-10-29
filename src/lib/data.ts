@@ -1,3 +1,4 @@
+
 import type { User, Listing, Conversation } from './types';
 import { placeholderImages } from './placeholder-images.json';
 
@@ -6,11 +7,11 @@ const getImage = (id: string) => {
 }
 
 const users: User[] = [
-  { id: 'user_1', name: 'Bucky Badger', email: 'bucky@wisc.edu', avatarUrl: getImage('user_bucky'), viewedTags: ['textbooks', 'electronics', 'furniture'] },
-  { id: 'user_2', name: 'Jane Doe', email: 'jdoe@wisc.edu', avatarUrl: getImage('user_jane'), viewedTags: ['furniture', 'decor'] },
-  { id: 'user_3', name: 'Mike Smith', email: 'msmith@wisc.edu', avatarUrl: getImage('user_mike'), viewedTags: ['bikes', 'sports'] },
-  { id: 'user_4', name: 'Sarah Lee', email: 'slee@wisc.edu', avatarUrl: getImage('user_sarah'), viewedTags: ['clothing', 'winter'] },
-  { id: 'user_5', name: 'Dave Davis', email: 'ddavis@wisc.edu', avatarUrl: getImage('user_dave'), viewedTags: ['music', 'electronics'] },
+  { id: 'user_1', name: 'Bucky Badger', email: 'bucky@wisc.edu', avatarUrl: getImage('user_bucky'), viewedTags: ['textbooks', 'electronics', 'furniture'], preferredCategories: ['electronics', 'furniture', 'bikes'] },
+  { id: 'user_2', name: 'Jane Doe', email: 'jdoe@wisc.edu', avatarUrl: getImage('user_jane'), viewedTags: ['furniture', 'decor'], preferredCategories: ['furniture', 'decor', 'clothing'] },
+  { id: 'user_3', name: 'Mike Smith', email: 'msmith@wisc.edu', avatarUrl: getImage('user_mike'), viewedTags: ['bikes', 'sports'], preferredCategories: ['bikes', 'sports', 'textbooks'] },
+  { id: 'user_4', name: 'Sarah Lee', email: 'slee@wisc.edu', avatarUrl: getImage('user_sarah'), viewedTags: ['clothing', 'winter'], preferredCategories: ['clothing', 'winter', 'dorm'] },
+  { id: 'user_5', name: 'Dave Davis', email: 'ddavis@wisc.edu', avatarUrl: getImage('user_dave'), viewedTags: ['music', 'electronics'], preferredCategories: ['music', 'electronics', 'instruments'] },
 ];
 
 const listings: Listing[] = [

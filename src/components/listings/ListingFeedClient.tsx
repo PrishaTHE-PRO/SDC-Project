@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -17,9 +18,14 @@ export default function ListingFeedClient({ listings, categories }: ListingFeedC
     ? listings.filter(listing => listing.tags.includes(selectedCategory))
     : listings;
     
+  // Don't render anything if there are no listings or categories to show in the client
+  if (listings.length === 0) {
+    return null;
+  }
+    
   return (
-    <div>
-      <div className="mb-6 flex flex-wrap gap-2">
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-2">
         <Button
           variant={selectedCategory === null ? 'default' : 'secondary'}
           onClick={() => setSelectedCategory(null)}
@@ -38,11 +44,13 @@ export default function ListingFeedClient({ listings, categories }: ListingFeedC
           </Button>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {filteredListings.map((listing) =>
-          listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
-        )}
-      </div>
+      {selectedCategory && (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {filteredListings.map((listing) =>
+            listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
+          )}
+        </div>
+      )}
     </div>
   );
 }
