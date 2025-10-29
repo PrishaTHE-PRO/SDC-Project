@@ -53,7 +53,7 @@ export function LoginForm() {
           description: "Welcome back!",
         });
         router.push('/');
-        router.refresh(); // This helps ensure client-side state is updated
+        // No router.refresh() needed, revalidatePath in server action handles it
       } else {
         toast({
           variant: 'destructive',
