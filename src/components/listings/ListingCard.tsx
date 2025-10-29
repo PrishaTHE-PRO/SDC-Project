@@ -1,8 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Listing } from '@/lib/types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { placeholderImages } from '@/lib/placeholder-images.json';
 
 interface ListingCardProps {
@@ -13,7 +12,6 @@ function getHint(imageUrl: string): string {
   const image = placeholderImages.find(img => img.imageUrl === imageUrl);
   return image?.imageHint || "listing image";
 }
-
 
 export default function ListingCard({ listing }: ListingCardProps) {
   const formatter = new Intl.NumberFormat('en-US', {
@@ -26,35 +24,26 @@ export default function ListingCard({ listing }: ListingCardProps) {
     <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 duration-300 ease-in-out">
       <Link href={`/listings/${listing.id}`} className="block">
         <CardHeader className="p-0">
-          <div className="aspect-video relative">
+          <div className="aspect-square relative">
             <Image
               src={listing.images[0]}
               alt={listing.title}
               fill
               className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
               data-ai-hint={getHint(listing.images[0])}
             />
           </div>
         </CardHeader>
-        <CardContent className="p-4">
-          <CardTitle className="mb-2 text-lg font-headline font-bold leading-tight tracking-tight truncate">
+        <CardContent className="p-3">
+          <CardTitle className="mb-1 text-base font-headline font-semibold leading-tight tracking-tight truncate">
             {listing.title}
           </CardTitle>
-          <p className="text-2xl font-semibold text-primary">
+          <p className="text-lg font-bold text-primary">
             {formatter.format(listing.price)}
           </p>
         </CardContent>
       </Link>
-      <CardFooter className="p-4 pt-0">
-        <div className="flex flex-wrap gap-2">
-          {listing.tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="capitalize">
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      </CardFooter>
     </Card>
   );
 }
