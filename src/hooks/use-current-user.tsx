@@ -11,9 +11,11 @@ const CurrentUserContext = createContext<CurrentUserContextType>({ user: null })
 
 export const CurrentUserProvider = ({ children, user }: { children: ReactNode; user?: User | null }) => {
   const value = { user: user || null };
-  // If a user is passed, it's a server component render, we provide it.
-  // Otherwise, we expect a parent provider to exist.
-  if (user !== undefined) {
+  const parentContext = useContext(CurrentUserContext);
+
+  // If a user is passed via props, we are on the server or at the root, so we provide the value.
+  // We also check if a parent context already exists. If it does, we don't need to re-provide.
+  if (user !== undefined || !parentContext) {
     return (
       <CurrentUserContext.Provider value={value}>
         {children}
@@ -21,13 +23,15 @@ export const CurrentUserProvider = ({ children, user }: { children: ReactNode; u
     );
   }
   
-  // This allows nested client components to use the context without needing a user prop
-  return <>{children}</>
+  // This allows nested client components to use the context from a parent provider
+  // without re-providing and causing state loss.
+  return <>{children}</>;
 };
 
 export const useCurrentUser = () => {
   const context = useContext(CurrentUserContext);
   if (context === undefined) {
+    // This error is a safeguard, but our logic above should prevent it.
     throw new Error('useCurrentUser must be used within a CurrentUserProvider');
   }
   return context;
