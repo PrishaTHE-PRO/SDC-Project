@@ -53,6 +53,7 @@ export function LoginForm() {
           description: "Welcome back!",
         });
         router.push('/');
+        router.refresh(); // This helps ensure client-side state is updated
       } else {
         toast({
           variant: 'destructive',

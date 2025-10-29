@@ -1,13 +1,15 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { UserNav } from '@/components/auth/UserNav';
 import { Logo } from '@/components/Logo';
 import { PlusCircle } from 'lucide-react';
 import { HeaderNav } from '@/components/layout/HeaderNav';
-import { getAuthenticatedUser } from '@/lib/auth';
+import { useCurrentUser } from '@/hooks/use-current-user';
 
-export default async function Header() {
-  const user = await getAuthenticatedUser();
+export default function Header() {
+  const { user } = useCurrentUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

@@ -22,11 +22,11 @@ export async function signInAction(email: string): Promise<{ success: boolean; m
     path: '/',
   });
   
-  revalidatePath('/'); // Revalidate the home page to update the header
+  revalidatePath('/', 'layout');
   return { success: true, message: 'Signed in successfully!' };
 }
 
 export async function signOutAction(): Promise<void> {
   cookies().delete(MOCK_AUTH_COOKIE);
-  revalidatePath('/'); // Revalidate the home page to update the header
+  revalidatePath('/', 'layout');
 }
