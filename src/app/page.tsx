@@ -1,14 +1,12 @@
 
 import { getRecommendations } from '@/ai/flows/personalized-listing-feed';
-import ListingCard from '@/components/listings/ListingCard';
 import ListingFeedClient from '@/components/listings/ListingFeedClient';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getActiveListings, getAllUsers } from '@/lib/data';
 import type { ListingWithSeller } from '@/lib/types';
-import { Separator } from '@/components/ui/separator';
 
 export default async function Home() {
-  const allListings = await getActiveListings(); // Use getActiveListings
+  const allListings = await getActiveListings();
   const allUsers = await getAllUsers();
   const user = await getAuthenticatedUser();
 
@@ -41,15 +39,14 @@ export default async function Home() {
           const bIndex = recommendedIds.indexOf(b.id);
 
           if (aIndex !== -1 && bIndex !== -1) {
-            return aIndex - bIndex; // Sort by recommendation order
+            return aIndex - bIndex;
           }
           if (aIndex !== -1) {
-            return -1; // a is recommended, b is not
+            return -1;
           }
           if (bIndex !== -1) {
-            return 1; // b is recommended, a is not
+            return 1;
           }
-          // Both are not recommended, sort by date
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
       }
@@ -58,69 +55,17 @@ export default async function Home() {
     }
   }
 
-  const allTags = allListings.flatMap(l => l.tags);
-  const allCategories = [...new Set(allTags)];
-
+  const allTags = [...new Set(allListings.flatMap(l => l.tags))];
   const preferredCategories = user?.preferredCategories || [];
-  const otherCategories = allCategories.filter(c => !preferredCategories.includes(c));
-
-  const listingsByPreferredCategory: { category: string, listings: ListingWithSeller[] }[] = preferredCategories.map(category => ({
-    category,
-    listings: sortedListings.filter(l => l.tags.includes(category)),
-  })).filter(group => group.listings.length > 0);
-
-  const otherListings = sortedListings.filter(listing => 
-    !listing.tags.some(tag => preferredCategories.includes(tag))
-  );
+  const otherCategories = allTags.filter(c => !preferredCategories.includes(c));
+  const categories = [...preferredCategories, ...otherCategories];
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
-      {user && listingsByPreferredCategory.length > 0 ? (
-        <>
-          <h1 className="mb-2 font-headline text-4xl font-bold tracking-tight">For You</h1>
-          <p className="mb-6 text-lg text-muted-foreground">Buy and sell from verified UW-Madison students</p>
-          <ListingFeedClient listings={sortedListings} categories={[...preferredCategories, ...otherCategories]} />
-          
-          <div className="mt-8 space-y-12">
-            {listingsByPreferredCategory.map(({ category, listings }) => (
-              <div key={category}>
-                <h2 className="mb-4 font-headline text-2xl font-bold capitalize tracking-tight">
-                  {category}
-                </h2>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {listings.map((listing) => (
-                    listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {otherListings.length > 0 && (
-             <>
-              <Separator className="my-12" />
-              <div>
-                <h2 className="mb-4 font-headline text-2xl font-bold tracking-tight">
-                  More For You
-                </h2>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {otherListings.map((listing) => (
-                    listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </>
-      ) : (
-        <>
-          <h1 className="mb-2 font-headline text-4xl font-bold tracking-tight">
-            For You
-          </h1>
-          <p className="mb-6 text-lg text-muted-foreground">Buy and sell from verified UW-Madison students</p>
-          <ListingFeedClient listings={sortedListings} categories={allCategories} />
-        </>
-      )}
+      <h1 className="mb-2 font-headline text-4xl font-bold tracking-tight">For You</h1>
+      <p className="mb-6 text-lg text-muted-foreground">Buy and sell from verified UW-Madison students</p>
+      
+      <ListingFeedClient listings={sortedListings} categories={categories} />
     </div>
   );
 }
