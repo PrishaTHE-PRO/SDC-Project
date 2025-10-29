@@ -59,7 +59,7 @@ export default async function MyListingsPage() {
             <h2 className="mb-4 font-headline text-2xl font-bold tracking-tight">Sold Items</h2>
             <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {soldListings.map((listing) => (
-                listing.seller ? <ListingCard key={listing.id} listing={listing} isSold={true} /> : null
+                listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
               ))}
             </div>
           </div>

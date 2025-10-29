@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 
 interface ListingCardProps {
   listing: ListingWithSeller;
-  isSold?: boolean;
 }
 
 function getHint(imageUrl: string): string {
@@ -29,7 +28,8 @@ const getInitials = (name = '') => {
   return '??';
 };
 
-export default function ListingCard({ listing, isSold = false }: ListingCardProps) {
+export default function ListingCard({ listing }: ListingCardProps) {
+  const isSold = listing.status === 'sold';
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
