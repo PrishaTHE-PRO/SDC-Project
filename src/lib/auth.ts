@@ -11,9 +11,7 @@ export async function getAuthenticatedUser(): Promise<User | null> {
   const userId = cookieStore.get(MOCK_AUTH_COOKIE)?.value;
 
   if (!userId) {
-    // To make the demo more interesting, let's log in user_1 by default.
-    // In a real app, you'd return null here.
-    return await getUserById('user_1');
+    return null;
   }
   
   const user = await getUserById(userId);

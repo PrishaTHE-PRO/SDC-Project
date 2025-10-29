@@ -2,13 +2,18 @@
 import { getRecommendations } from '@/ai/flows/personalized-listing-feed';
 import ListingFeedClient from '@/components/listings/ListingFeedClient';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { getActiveListings, getAllUsers } from '@/lib/data';
+import { getActiveListings, getAllUsers, getUserById } from '@/lib/data';
 import type { ListingWithSeller } from '@/lib/types';
 
 export default async function Home() {
   const allListings = await getActiveListings();
   const allUsers = await getAllUsers();
-  const user = await getAuthenticatedUser();
+  let user = await getAuthenticatedUser();
+
+  if (!user) {
+    // For demo purposes, default to user_1 if not logged in.
+    user = await getUserById('user_1');
+  }
 
   const listingsWithSellers: ListingWithSeller[] = allListings.map(listing => ({
     ...listing,

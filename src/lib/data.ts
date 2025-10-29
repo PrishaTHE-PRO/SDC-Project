@@ -263,5 +263,3 @@ export const deleteListingById = (listingId: string): Promise<boolean> => {
     }, 100);
   });
 };
-
-    
