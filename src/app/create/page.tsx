@@ -17,6 +17,12 @@ export default async function CreateListingPage() {
           <CardDescription>
             Fill out the details below to sell your item on BadgerExchange.
           </CardDescription>
+          <CardDescription className="pt-2 text-foreground/80">
+            Please take quality photos of your product and{' '}
+            <span className="font-semibold">
+              make sure that you are able to bring the product to the UW-Madison campus.
+            </span>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <CreateListingForm />
