@@ -1,7 +1,7 @@
 'use client';
 
 import type { ListingWithSeller } from '@/lib/types';
-import FeedListingCard from './FeedListingCard';
+import ListingCard from './ListingCard';
 
 interface ListingFeedClientProps {
   listings: ListingWithSeller[];
@@ -9,10 +9,10 @@ interface ListingFeedClientProps {
 
 export default function ListingFeedClient({ listings }: ListingFeedClientProps) {
   return (
-    <div className="space-y-6">
-      {listings.map((listing) => (
-        listing.seller ? <FeedListingCard key={listing.id} listing={listing} /> : null
-      ))}
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {listings.map((listing) =>
+        listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
+      )}
     </div>
   );
 }

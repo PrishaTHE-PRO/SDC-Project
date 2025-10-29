@@ -56,7 +56,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-8">
+    <div className="container mx-auto max-w-5xl px-4 py-8">
       <h1 className="mb-8 font-headline text-4xl font-bold tracking-tight">
         For You
       </h1>
