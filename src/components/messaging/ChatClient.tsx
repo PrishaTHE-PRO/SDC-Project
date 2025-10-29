@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -43,10 +44,18 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
       if (convo) {
         setSelectedConvoId(convo.id);
       }
-    } else if (conversations.length > 0) {
-      setSelectedConvoId(conversations[0].id);
+    } else if (conversations.length > 0 && !selectedConvoId) {
+       // If no conversation is selected via URL, select the most recent one.
+       // Sort by lastMessageAt to find the most recent.
+       const sortedConversations = [...conversations].sort((a, b) => 
+         new Date(b.messages[b.messages.length - 1]?.createdAt || b.lastMessageAt).getTime() - 
+         new Date(a.messages[a.messages.length - 1]?.createdAt || a.lastMessageAt).getTime()
+       );
+       if (sortedConversations.length > 0) {
+        setSelectedConvoId(sortedConversations[0].id);
+       }
     }
-  }, [conversations, searchParams]);
+  }, [conversations, searchParams, selectedConvoId]);
 
   useEffect(() => {
     const checkMobile = () => setIsMobileView(window.innerWidth < 768);
@@ -149,6 +158,11 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
                       </div>
                     </div>
                   ))}
+                  {selectedConvo.messages.length === 0 && (
+                     <div className="text-center text-sm text-muted-foreground py-8">
+                       Start the conversation about "{selectedConvo.listing?.title}".
+                     </div>
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>

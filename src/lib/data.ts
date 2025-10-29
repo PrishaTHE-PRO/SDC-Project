@@ -147,7 +147,7 @@ let listings: Listing[] = [
   },
 ];
 
-const conversations: Conversation[] = [
+let conversations: Conversation[] = [
   {
     id: 'convo_1',
     listingId: 'listing_1',
@@ -177,7 +177,7 @@ const conversations: Conversation[] = [
       { id: 'msg_5', text: "Is the monitor still available?", senderId: 'user_5', createdAt: '2024-05-25T13:15:00Z' },
     ]
   }
-]
+];
 
 // Simulate API calls
 export const getAllListings = async (): Promise<Listing[]> => {
@@ -205,6 +205,33 @@ export const getConversationsForUser = async (userId: string): Promise<Conversat
   const userConvos = conversations.filter(c => c.participantIds.includes(userId));
   return new Promise(resolve => setTimeout(() => resolve(userConvos), 150));
 }
+
+export const createOrGetConversation = async (listingId: string, buyerId: string, sellerId: string): Promise<Conversation | undefined> => {
+  // Check if a conversation already exists for this listing between these users
+  let conversation = conversations.find(c =>
+    c.listingId === listingId &&
+    c.participantIds.includes(buyerId) &&
+    c.participantIds.includes(sellerId)
+  );
+
+  if (conversation) {
+    return new Promise(resolve => setTimeout(() => resolve(conversation), 50));
+  }
+
+  // If not, create a new one
+  const newConversation: Conversation = {
+    id: `convo_${conversations.length + 1}`,
+    listingId: listingId,
+    participantIds: [buyerId, sellerId],
+    messages: [],
+    lastMessageAt: new Date().toISOString(),
+  };
+
+  conversations.push(newConversation);
+  console.log('Created new conversation:', newConversation);
+
+  return new Promise(resolve => setTimeout(() => resolve(newConversation), 50));
+};
 
 // Mock functions for mutations
 export const markListingAsSold = (listingId: string) => {
