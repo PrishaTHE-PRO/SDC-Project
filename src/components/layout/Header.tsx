@@ -9,7 +9,7 @@ import { HeaderNav } from '@/components/layout/HeaderNav';
 import { useCurrentUser } from '@/hooks/use-current-user';
 
 export default function Header() {
-  const { user } = useCurrentUser();
+  const { user, isLoading } = useCurrentUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -17,7 +17,12 @@ export default function Header() {
         <Logo />
         <HeaderNav />
         <div className="ml-auto flex items-center space-x-4">
-          {user ? (
+          {isLoading ? (
+            <div className="flex items-center space-x-4">
+              <Button disabled className="w-36"></Button>
+              <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
+            </div>
+          ) : user ? (
             <>
               <Button asChild>
                 <Link href="/create">

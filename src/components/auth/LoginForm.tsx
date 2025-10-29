@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { signIn } from '@/lib/auth.client';
-import { useRouter } from 'next/navigation';
+import { signInAction } from '@/lib/auth.server';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
@@ -34,6 +34,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,14 +47,16 @@ export function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const result = await signIn(values.email);
+      const result = await signInAction(values.email);
       if (result.success) {
         toast({
           title: 'Login Successful',
           description: "Welcome back!",
         });
-        router.push('/');
-        // No router.refresh() needed, revalidatePath in server action handles it
+        // The server action's revalidatePath handles the refresh.
+        // We just need to navigate.
+        const from = searchParams.get('from') || '/';
+        router.push(from);
       } else {
         toast({
           variant: 'destructive',

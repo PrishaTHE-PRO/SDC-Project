@@ -1,13 +1,44 @@
-import { redirect } from 'next/navigation';
-import { getAuthenticatedUser } from '@/lib/auth';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCurrentUser } from '@/hooks/use-current-user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default async function ProfilePage() {
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    redirect('/login?from=/profile');
+export default function ProfilePage() {
+  const { user, isLoading } = useCurrentUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login?from=/profile');
+    }
+  }, [isLoading, user, router]);
+
+  if (isLoading || !user) {
+    return (
+      <div className="container mx-auto max-w-2xl py-8">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-20 w-20 rounded-full" />
+              <div>
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-6 w-64 mt-2" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Separator className="my-4" />
+            <Skeleton className="h-6 w-1/3 mb-2" />
+            <Skeleton className="h-5 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const getInitials = (name: string) => {

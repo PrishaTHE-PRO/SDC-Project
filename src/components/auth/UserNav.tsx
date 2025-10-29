@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/lib/types';
-import { signOut } from '@/lib/auth.client';
+import { signOutAction } from '@/lib/auth.server';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -24,8 +24,8 @@ export function UserNav({ user }: UserNavProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    await signOut();
-    // No router.refresh() needed, revalidatePath in server action handles it
+    await signOutAction();
+    router.push('/');
   };
 
   const getInitials = (name: string) => {
