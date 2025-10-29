@@ -234,22 +234,32 @@ export const createOrGetConversation = async (listingId: string, buyerId: string
 };
 
 // Mock functions for mutations
-export const markListingAsSold = (listingId: string) => {
-  const listingIndex = listings.findIndex(l => l.id === listingId);
-  if (listingIndex !== -1) {
-    listings[listingIndex].status = 'sold';
-    console.log(`Listing ${listingId} marked as sold.`);
-    return true;
-  }
-  return false;
+export const markListingAsSold = (listingId: string): Promise<boolean> => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const listingIndex = listings.findIndex(l => l.id === listingId);
+      if (listingIndex !== -1) {
+        listings[listingIndex].status = 'sold';
+        console.log(`Listing ${listingId} marked as sold.`);
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    }, 100);
+  });
 };
 
-export const deleteListingById = (listingId: string) => {
-  const initialLength = listings.length;
-  listings = listings.filter(l => l.id !== listingId);
-  if (listings.length < initialLength) {
-    console.log(`Listing ${listingId} deleted.`);
-    return true;
-  }
-  return false;
+export const deleteListingById = (listingId: string): Promise<boolean> => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const initialLength = listings.length;
+      listings = listings.filter(l => l.id !== listingId);
+      if (listings.length < initialLength) {
+        console.log(`Listing ${listingId} deleted.`);
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    }, 100);
+  });
 };

@@ -13,7 +13,7 @@ export async function markAsSoldAction(listingId: string) {
   
   // In a real app, you'd also check if the user is the owner of the listing here.
   
-  const success = markListingAsSold(listingId);
+  const success = await markListingAsSold(listingId);
   
   if (success) {
     revalidatePath(`/listings/${listingId}`);
@@ -33,7 +33,7 @@ export async function deleteListingAction(listingId: string) {
 
     // In a real app, you'd also check if the user is the owner of the listing here.
 
-    const success = deleteListingById(listingId);
+    const success = await deleteListingById(listingId);
 
     if (success) {
         revalidatePath('/my-listings');
