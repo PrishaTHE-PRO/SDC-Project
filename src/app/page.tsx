@@ -3,12 +3,12 @@ import { getRecommendations } from '@/ai/flows/personalized-listing-feed';
 import ListingCard from '@/components/listings/ListingCard';
 import ListingFeedClient from '@/components/listings/ListingFeedClient';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { getAllListings, getAllUsers } from '@/lib/data';
+import { getActiveListings, getAllUsers } from '@/lib/data';
 import type { ListingWithSeller } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 
 export default async function Home() {
-  const allListings = await getAllListings();
+  const allListings = await getActiveListings(); // Use getActiveListings
   const allUsers = await getAllUsers();
   const user = await getAuthenticatedUser();
 

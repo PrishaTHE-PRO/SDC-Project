@@ -1,9 +1,10 @@
+
 import ListingCard from '@/components/listings/ListingCard';
-import { getAllListings, getAllUsers } from '@/lib/data';
+import { getActiveListings, getAllUsers } from '@/lib/data';
 import type { Listing, ListingWithSeller } from '@/lib/types';
 
 export default async function TrendingPage() {
-  const listings: Listing[] = await getAllListings();
+  const listings: Listing[] = await getActiveListings(); // Use getActiveListings
   const users = await getAllUsers();
 
   const listingsWithSellers: ListingWithSeller[] = listings.map(listing => ({

@@ -1,12 +1,16 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import type { ListingWithSeller } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { placeholderImages } from '@/lib/placeholder-images.json';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface ListingCardProps {
   listing: ListingWithSeller;
+  isSold?: boolean;
 }
 
 function getHint(imageUrl: string): string {
@@ -25,7 +29,7 @@ const getInitials = (name = '') => {
   return '??';
 };
 
-export default function ListingCard({ listing }: ListingCardProps) {
+export default function ListingCard({ listing, isSold = false }: ListingCardProps) {
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -33,9 +37,15 @@ export default function ListingCard({ listing }: ListingCardProps) {
   });
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 duration-300 ease-in-out flex flex-col">
+    <Card className={cn(
+      "overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 duration-300 ease-in-out flex flex-col",
+      isSold && "opacity-60 hover:opacity-80"
+    )}>
       <Link href={`/listings/${listing.id}`} className="block">
         <div className="aspect-square relative">
+           {isSold && (
+            <Badge variant="destructive" className="absolute top-2 left-2 z-10">SOLD</Badge>
+          )}
           <Image
             src={listing.images[0]}
             alt={listing.title}

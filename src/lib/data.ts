@@ -14,7 +14,7 @@ const users: User[] = [
   { id: 'user_5', name: 'Dave Davis', email: 'ddavis@wisc.edu', avatarUrl: getImage('user_dave'), viewedTags: ['music', 'electronics'], preferredCategories: ['music', 'electronics', 'instruments'] },
 ];
 
-const listings: Listing[] = [
+let listings: Listing[] = [
   {
     id: 'listing_1',
     title: 'CS 577 Textbook - Like New',
@@ -26,6 +26,7 @@ const listings: Listing[] = [
     createdAt: '2024-05-20T10:00:00Z',
     views: 150,
     lastViewedAt: '2024-05-28T10:00:00Z',
+    status: 'active',
   },
   {
     id: 'listing_2',
@@ -38,6 +39,7 @@ const listings: Listing[] = [
     createdAt: '2024-05-22T14:30:00Z',
     views: 250,
     lastViewedAt: '2024-05-28T11:00:00Z',
+    status: 'active',
   },
   {
     id: 'listing_3',
@@ -50,6 +52,7 @@ const listings: Listing[] = [
     createdAt: '2024-05-25T09:00:00Z',
     views: 300,
     lastViewedAt: '2024-05-28T12:30:00Z',
+    status: 'active',
   },
   {
     id: 'listing_4',
@@ -62,6 +65,7 @@ const listings: Listing[] = [
     createdAt: '2024-05-26T11:00:00Z',
     views: 80,
     lastViewedAt: '2024-05-28T09:00:00Z',
+    status: 'active',
   },
   {
     id: 'listing_5',
@@ -74,6 +78,7 @@ const listings: Listing[] = [
     createdAt: '2024-05-19T18:00:00Z',
     views: 180,
     lastViewedAt: '2024-05-27T15:00:00Z',
+    status: 'active',
   },
   {
     id: 'listing_6',
@@ -86,6 +91,7 @@ const listings: Listing[] = [
     createdAt: '2024-05-27T12:00:00Z',
     views: 55,
     lastViewedAt: '2024-05-28T12:00:00Z',
+    status: 'active',
   },
   {
     id: 'listing_7',
@@ -98,6 +104,7 @@ const listings: Listing[] = [
     createdAt: '2024-05-24T16:00:00Z',
     views: 210,
     lastViewedAt: '2024-05-28T09:30:00Z',
+    status: 'sold',
   },
   {
     id: 'listing_8',
@@ -110,6 +117,7 @@ const listings: Listing[] = [
     createdAt: '2024-05-21T08:20:00Z',
     views: 120,
     lastViewedAt: '2024-05-27T20:00:00Z',
+    status: 'active',
   },
   {
     id: 'listing_9',
@@ -122,6 +130,7 @@ const listings: Listing[] = [
     createdAt: '2024-05-26T18:00:00Z',
     views: 95,
     lastViewedAt: '2024-05-28T08:15:00Z',
+    status: 'active',
   },
   {
     id: 'listing_10',
@@ -134,6 +143,7 @@ const listings: Listing[] = [
     createdAt: '2024-05-18T13:00:00Z',
     views: 60,
     lastViewedAt: '2024-05-26T13:00:00Z',
+    status: 'active',
   },
 ];
 
@@ -174,6 +184,11 @@ export const getAllListings = async (): Promise<Listing[]> => {
   return new Promise(resolve => setTimeout(() => resolve(listings), 200));
 }
 
+export const getActiveListings = async (): Promise<Listing[]> => {
+    const activeListings = listings.filter(l => l.status === 'active');
+    return new Promise(resolve => setTimeout(() => resolve(activeListings), 200));
+};
+
 export const getListingById = async (id: string): Promise<Listing | undefined> => {
   return new Promise(resolve => setTimeout(() => resolve(listings.find(l => l.id === id)), 100));
 }
@@ -190,3 +205,24 @@ export const getConversationsForUser = async (userId: string): Promise<Conversat
   const userConvos = conversations.filter(c => c.participantIds.includes(userId));
   return new Promise(resolve => setTimeout(() => resolve(userConvos), 150));
 }
+
+// Mock functions for mutations
+export const markListingAsSold = (listingId: string) => {
+  const listingIndex = listings.findIndex(l => l.id === listingId);
+  if (listingIndex !== -1) {
+    listings[listingIndex].status = 'sold';
+    console.log(`Listing ${listingId} marked as sold.`);
+    return true;
+  }
+  return false;
+};
+
+export const deleteListingById = (listingId: string) => {
+  const initialLength = listings.length;
+  listings = listings.filter(l => l.id !== listingId);
+  if (listings.length < initialLength) {
+    console.log(`Listing ${listingId} deleted.`);
+    return true;
+  }
+  return false;
+};

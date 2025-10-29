@@ -1,12 +1,15 @@
+
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getListingById, getUserById } from '@/lib/data';
+import { getAuthenticatedUser } from '@/lib/auth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import ListingActions from '@/components/listings/ListingActions';
 import { MessageSquare, Tag } from 'lucide-react';
 import Link from 'next/link';
 
@@ -16,6 +19,9 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
   if (!listing) {
     notFound();
   }
+  
+  const currentUser = await getAuthenticatedUser();
+  const isSeller = currentUser?.id === listing.sellerId;
 
   const seller = await getUserById(listing.sellerId);
 
@@ -34,6 +40,11 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
 
   return (
     <div className="container mx-auto max-w-6xl p-4 py-8 md:p-8">
+       {listing.status === 'sold' && (
+        <div className="mb-4 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-4 text-yellow-800">
+          <p className="font-semibold">This item has been sold.</p>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         <div className="md:col-span-2">
           <Carousel className="w-full overflow-hidden rounded-lg border">
@@ -67,11 +78,15 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
               </p>
             </CardHeader>
             <CardContent>
-              <Button asChild size="lg" className="w-full">
-                <Link href={`/messages?listingId=${listing.id}&sellerId=${seller?.id}`}>
-                  <MessageSquare className="mr-2 h-5 w-5" /> Message Seller
-                </Link>
-              </Button>
+              {isSeller ? (
+                <ListingActions listingId={listing.id} isSold={listing.status === 'sold'} />
+              ) : (
+                <Button asChild size="lg" className="w-full" disabled={listing.status === 'sold'}>
+                  <Link href={`/messages?listingId=${listing.id}&sellerId=${seller?.id}`}>
+                    <MessageSquare className="mr-2 h-5 w-5" /> Message Seller
+                  </Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
           

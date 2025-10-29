@@ -19,6 +19,7 @@ export interface Listing {
   createdAt: string;
   views: number;
   lastViewedAt: string;
+  status: 'active' | 'sold';
 }
 
 export type ListingWithSeller = Listing & { seller?: User };
