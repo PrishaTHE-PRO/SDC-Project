@@ -15,7 +15,7 @@ import MessageSellerButton from '@/components/listings/MessageSellerButton';
 
 export default async function ListingDetailPage({ params }: { params: { id: string } }) {
   const listing = await getListingById(params.id);
-
+  
   if (!listing) {
     notFound();
   }
@@ -79,7 +79,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
             </CardHeader>
             <CardContent>
               {isSeller ? (
-                <ListingActions listingId={listing.id} isSold={listing.status == 'sold'} />
+                <ListingActions listingId={listing.id} isSold={listing.status === 'sold'} />
               ) : (
                 <MessageSellerButton 
                   listingId={listing.id}
