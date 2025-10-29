@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { UserNav } from '@/components/auth/UserNav';
 import { Logo } from '@/components/Logo';
 import { PlusCircle } from 'lucide-react';
+import { HeaderNav } from '@/components/layout/HeaderNav';
 
 export default async function Header() {
   const user = await getAuthenticatedUser();
@@ -12,26 +13,7 @@ export default async function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
         <Logo />
-        <nav className="ml-6 flex items-center space-x-4 text-sm font-medium">
-          <Link
-            href="/"
-            className="text-foreground/60 transition-colors hover:text-foreground/80"
-          >
-            Home
-          </Link>
-          <Link
-            href="/trending"
-            className="text-foreground/60 transition-colors hover:text-foreground/80"
-          >
-            Trending
-          </Link>
-          <Link
-            href="/messages"
-            className="text-foreground/60 transition-colors hover:text-foreground/80"
-          >
-            Messages
-          </Link>
-        </nav>
+        <HeaderNav />
         <div className="ml-auto flex items-center space-x-4">
           {user ? (
             <>
