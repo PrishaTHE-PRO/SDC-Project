@@ -79,7 +79,7 @@ export default function ListingActions({ listingId, isSold }: ListingActionsProp
   }
 
   return (
-    <div className="flex w-full gap-2">
+    <div className="flex w-full flex-col gap-2">
       <Button size="lg" className="w-full" onClick={handleMarkAsSold} disabled={isMarkingSold || isDeleting}>
         {isMarkingSold ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CheckCircle className="mr-2 h-5 w-5" />}
         Mark as Sold
