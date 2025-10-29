@@ -1,17 +1,17 @@
 
+
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getListingById, getUserById } from '@/lib/data';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import ListingActions from '@/components/listings/ListingActions';
-import { MessageSquare, Tag } from 'lucide-react';
-import Link from 'next/link';
+import { Tag } from 'lucide-react';
+import MessageSellerButton from '@/components/listings/MessageSellerButton';
 
 export default async function ListingDetailPage({ params }: { params: { id: string } }) {
   const listing = await getListingById(params.id);
@@ -81,11 +81,11 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
               {isSeller ? (
                 <ListingActions listingId={listing.id} isSold={listing.status === 'sold'} />
               ) : (
-                <Button asChild size="lg" className="w-full" disabled={listing.status === 'sold'}>
-                  <Link href={`/messages?listingId=${listing.id}&sellerId=${seller?.id}`}>
-                    <MessageSquare className="mr-2 h-5 w-5" /> Message Seller
-                  </Link>
-                </Button>
+                <MessageSellerButton 
+                  listingId={listing.id}
+                  sellerId={seller?.id}
+                  disabled={listing.status === 'sold'}
+                />
               )}
             </CardContent>
           </Card>
