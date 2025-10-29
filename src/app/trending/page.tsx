@@ -1,17 +1,23 @@
 import ListingCard from '@/components/listings/ListingCard';
-import { getAllListings } from '@/lib/data';
-import type { Listing } from '@/lib/types';
+import { getAllListings, getAllUsers } from '@/lib/data';
+import type { Listing, ListingWithSeller } from '@/lib/types';
 
 export default async function TrendingPage() {
   const listings: Listing[] = await getAllListings();
+  const users = await getAllUsers();
+
+  const listingsWithSellers: ListingWithSeller[] = listings.map(listing => ({
+    ...listing,
+    seller: users.find(u => u.id === listing.sellerId)
+  }));
 
   // Sort by lastViewedAt to determine "trending"
-  const trendingListings = [...listings].sort(
+  const trendingListings = [...listingsWithSellers].sort(
     (a, b) => new Date(b.lastViewedAt).getTime() - new Date(a.lastViewedAt).getTime()
   );
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8">
+    <div className="container mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8 text-center">
         <h1 className="font-headline text-4xl font-bold tracking-tight">
           Trending Listings
@@ -20,9 +26,9 @@ export default async function TrendingPage() {
           See what&apos;s popular right now on BadgerExchange.
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {trendingListings.map((listing) => (
-          <ListingCard key={listing.id} listing={listing} />
+          listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
         ))}
       </div>
     </div>
