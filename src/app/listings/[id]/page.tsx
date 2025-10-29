@@ -1,9 +1,8 @@
-
+'use client';
 
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getListingById, getUserById } from '@/lib/data';
-import { getAuthenticatedUser } from '@/lib/auth';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,18 +11,41 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import ListingActions from '@/components/listings/ListingActions';
 import { Tag } from 'lucide-react';
 import MessageSellerButton from '@/components/listings/MessageSellerButton';
+import { useEffect, useState } from 'react';
+import type { Listing, User } from '@/lib/types';
+import { useCurrentUser } from '@/hooks/use-current-user';
 
-export default async function ListingDetailPage({ params }: { params: { id: string } }) {
-  const listing = await getListingById(params.id);
-  
-  if (!listing) {
-    notFound();
+export default function ListingDetailPage({ params }: { params: { id: string } }) {
+  const { user: currentUser } = useCurrentUser();
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [seller, setSeller] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchListingData = async () => {
+      setIsLoading(true);
+      const fetchedListing = await getListingById(params.id);
+      if (fetchedListing) {
+        setListing(fetchedListing);
+        const fetchedSeller = await getUserById(fetchedListing.sellerId);
+        if (fetchedSeller) {
+          setSeller(fetchedSeller);
+        }
+      } else {
+        notFound();
+      }
+      setIsLoading(false);
+    };
+
+    fetchListingData();
+  }, [params.id]);
+
+  if (isLoading || !listing) {
+    // You can add a loading skeleton here
+    return <div className="container mx-auto max-w-6xl p-4 py-8 md:p-8">Loading...</div>;
   }
-  
-  const currentUser = await getAuthenticatedUser();
-  const isSeller = currentUser?.id === listing.sellerId;
 
-  const seller = await getUserById(listing.sellerId);
+  const isSeller = currentUser?.id === listing.sellerId;
 
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -31,6 +53,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
   });
 
   const getInitials = (name: string) => {
+    if (!name) return '??';
     const names = name.split(' ');
     if (names.length > 1) {
       return names[0][0] + names[names.length - 1][0];
