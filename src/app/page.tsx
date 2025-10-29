@@ -77,6 +77,8 @@ export default async function Home() {
     <div className="container mx-auto max-w-7xl px-4 py-8">
       {user && listingsByPreferredCategory.length > 0 ? (
         <>
+          <h1 className="mb-2 font-headline text-4xl font-bold tracking-tight">For You</h1>
+          <p className="mb-6 text-lg text-muted-foreground">Buy and sell from verified UW-Madison students</p>
           <ListingFeedClient listings={sortedListings} categories={[...preferredCategories, ...otherCategories]} />
           
           <div className="mt-8 space-y-12">
@@ -112,9 +114,10 @@ export default async function Home() {
         </>
       ) : (
         <>
-          <h1 className="mb-4 font-headline text-4xl font-bold tracking-tight">
+          <h1 className="mb-2 font-headline text-4xl font-bold tracking-tight">
             For You
           </h1>
+          <p className="mb-6 text-lg text-muted-foreground">Buy and sell from verified UW-Madison students</p>
           <ListingFeedClient listings={sortedListings} categories={allCategories} />
         </>
       )}
