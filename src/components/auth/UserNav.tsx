@@ -26,7 +26,7 @@ export function UserNav({ user }: UserNavProps) {
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
-    router.refresh();
+    router.refresh(); // Keep this for sign out to ensure quick UI update
   };
 
   const getInitials = (name: string) => {

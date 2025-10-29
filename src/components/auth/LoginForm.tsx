@@ -53,7 +53,6 @@ export function LoginForm() {
           description: "Welcome back!",
         });
         router.push('/');
-        router.refresh(); // To update header state
       } else {
         toast({
           variant: 'destructive',

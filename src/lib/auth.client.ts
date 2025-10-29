@@ -9,5 +9,5 @@ export async function signIn(email: string) {
 }
 
 export async function signOut() {
-    return await signOutAction();
+    await signOutAction();
 }

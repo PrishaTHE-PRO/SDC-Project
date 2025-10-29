@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 
 const MOCK_AUTH_COOKIE = 'mock_auth_user_id';
 
@@ -21,9 +22,11 @@ export async function signInAction(email: string): Promise<{ success: boolean; m
     path: '/',
   });
   
+  revalidatePath('/'); // Revalidate the home page to update the header
   return { success: true, message: 'Signed in successfully!' };
 }
 
 export async function signOutAction(): Promise<void> {
   cookies().delete(MOCK_AUTH_COOKIE);
+  revalidatePath('/'); // Revalidate the home page to update the header
 }
