@@ -13,7 +13,7 @@ export default async function Home() {
   const listingsWithSellers: ListingWithSeller[] = allListings.map(listing => ({
     ...listing,
     seller: allUsers.find(u => u.id === listing.sellerId)
-  }));
+  })).filter(l => l.status === 'active');
   
   let sortedListings: ListingWithSeller[] = [...listingsWithSellers].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
