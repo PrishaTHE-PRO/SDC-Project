@@ -21,10 +21,11 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const [seller, setSeller] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const listingId = params.id;
+
   useEffect(() => {
     const fetchListingData = async () => {
       setIsLoading(true);
-      const listingId = params.id;
       const fetchedListing = await getListingById(listingId);
       if (fetchedListing) {
         setListing(fetchedListing);
@@ -39,7 +40,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
     };
 
     fetchListingData();
-  }, [params.id]);
+  }, [listingId]);
 
   if (isLoading || !listing) {
     // You can add a loading skeleton here
