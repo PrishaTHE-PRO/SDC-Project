@@ -3,17 +3,20 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/layout/Header';
 import { CurrentUserProvider } from '@/hooks/use-current-user';
+import { getAuthenticatedUser } from '@/lib/auth';
 
 export const metadata: Metadata = {
   title: 'BadgerExchange',
   description: 'A modern marketplace for UW-Madison students.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getAuthenticatedUser();
+
   return (
     <html lang="en" className="dark">
       <head>
@@ -29,7 +32,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <CurrentUserProvider>
+        <CurrentUserProvider user={user}>
           <div className="flex min-h-screen flex-col">
             <Header />
             <main className="flex-1">{children}</main>
