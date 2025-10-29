@@ -24,7 +24,8 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     const fetchListingData = async () => {
       setIsLoading(true);
-      const fetchedListing = await getListingById(params.id);
+      const listingId = params.id;
+      const fetchedListing = await getListingById(listingId);
       if (fetchedListing) {
         setListing(fetchedListing);
         const fetchedSeller = await getUserById(fetchedListing.sellerId);
