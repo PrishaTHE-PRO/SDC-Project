@@ -79,7 +79,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
             </CardHeader>
             <CardContent>
               {isSeller ? (
-                <ListingActions listingId={listing.id} isSold={listing.status === 'sold'} />
+                <ListingActions listingId={listing.id} isSold={listing.status == 'sold'} />
               ) : (
                 <MessageSellerButton 
                   listingId={listing.id}
