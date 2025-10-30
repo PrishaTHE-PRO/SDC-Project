@@ -11,7 +11,7 @@ export function useUser() {
 
   useEffect(() => {
     if (!firebaseApp) {
-      // Firebase app might still be initializing
+      // Firebase app might still be initializing, wait for it.
       setIsLoading(true);
       return;
     }

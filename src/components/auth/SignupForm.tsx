@@ -60,8 +60,8 @@ export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const { app: firebaseApp } = useFirebaseApp();
-  const { firestore } = useFirestore();
+  const { app: firebaseApp, isLoading: isAppLoading } = useFirebaseApp();
+  const { firestore, isLoading: isFirestoreLoading } = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -238,7 +238,7 @@ export function SignupForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full" disabled={isLoading || isAppLoading || isFirestoreLoading}>
            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
            Create Account
         </Button>

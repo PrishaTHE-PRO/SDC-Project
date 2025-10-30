@@ -36,7 +36,7 @@ export function LoginForm() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { app: firebaseApp } = useFirebaseApp();
+  const { app: firebaseApp, isLoading: isAppLoading } = useFirebaseApp();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -111,7 +111,7 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full" disabled={isLoading || isAppLoading}>
            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
            Sign In
         </Button>
