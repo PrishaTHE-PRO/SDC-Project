@@ -4,12 +4,10 @@ import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import ListingCard from '@/components/listings/ListingCard';
-import type { Listing, UserProfile } from '@/lib/types';
+import type { Listing } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-
-type ListingWithSeller = Listing & { seller?: UserProfile };
+import { collection, query, where } from 'firebase/firestore';
 
 export default function MyListingsPage() {
   const { user, isLoading: isUserLoading } = useUser();
@@ -22,24 +20,6 @@ export default function MyListingsPage() {
   }, [firestore, user]);
 
   const { data: myListings, isLoading: isLoadingListings } = useCollection<Listing>(myListingsQuery);
-
-  const listingsWithSellers = useMemo(() => {
-    if (!myListings || !user) return [];
-    // Since these are the user's own listings, we can just attach their profile.
-    const sellerProfile: UserProfile = {
-        id: user.uid,
-        name: user.displayName || 'Anonymous',
-        email: user.email || '',
-        avatarUrl: user.photoURL || '',
-        preferredCategories: [], // This might need to be fetched separately if needed
-        viewedTags: [],
-    }
-    return myListings.map(listing => ({
-      ...listing,
-      seller: sellerProfile
-    }));
-  }, [myListings, user]);
-  
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -62,8 +42,8 @@ export default function MyListingsPage() {
     );
   }
   
-  const activeListings = listingsWithSellers.filter(l => l.status === 'active');
-  const soldListings = listingsWithSellers.filter(l => l.status === 'sold');
+  const activeListings = myListings?.filter(l => l.status === 'active') || [];
+  const soldListings = myListings?.filter(l => l.status === 'sold') || [];
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
@@ -81,7 +61,7 @@ export default function MyListingsPage() {
         {activeListings.length > 0 ? (
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {activeListings.map((listing) => (
-              listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
+              <ListingCard key={listing.id} listing={listing} />
             ))}
           </div>
         ) : (
@@ -99,7 +79,7 @@ export default function MyListingsPage() {
             <h2 className="mb-4 font-headline text-2xl font-bold tracking-tight">Sold Items</h2>
             <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {soldListings.map((listing) => (
-                listing.seller ? <ListingCard key={listing.id} listing={listing} /> : null
+                <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>
           </div>
