@@ -7,6 +7,10 @@ import { placeholderImages } from '@/lib/placeholder-images.json';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useDoc, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
+import { useMemo } from 'react';
 
 interface ListingCardProps {
   listing: ListingWithSeller;
@@ -29,12 +33,21 @@ const getInitials = (name = '') => {
 };
 
 export default function ListingCard({ listing }: ListingCardProps) {
+  const { firestore } = useFirestore();
   const isSold = listing.status === 'sold';
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
   });
+
+  const sellerRef = useMemo(() => {
+    if (!firestore || !listing.sellerId) return null;
+    return doc(firestore, 'users', listing.sellerId);
+  }, [firestore, listing.sellerId]);
+
+  const { data: seller } = useDoc<UserProfile>(sellerRef);
+
 
   return (
     <Card className={cn(
@@ -68,12 +81,12 @@ export default function ListingCard({ listing }: ListingCardProps) {
           <p className="text-lg font-bold text-primary">
             {formatter.format(listing.price)}
           </p>
-          {listing.seller && (
+          {seller && (
              <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground truncate">{listing.seller.name}</span>
+              <span className="text-xs text-muted-foreground truncate">{seller.name}</span>
               <Avatar className="h-6 w-6">
-                <AvatarImage src={listing.seller.avatarUrl} alt={listing.seller.name} />
-                <AvatarFallback>{getInitials(listing.seller.name)}</AvatarFallback>
+                <AvatarImage src={seller.avatarUrl} alt={seller.name} />
+                <AvatarFallback>{getInitials(seller.name)}</AvatarFallback>
               </Avatar>
             </div>
           )}

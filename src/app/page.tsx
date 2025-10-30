@@ -26,30 +26,14 @@ export default function Home() {
   }, [firestore, authUser]);
   const { data: userProfile, isLoading: isLoadingUserProfile } = useDoc<UserProfile>(userProfileRef);
 
-  // 3. Fetch all user profiles to attach seller info
-  const usersQuery = useMemo(() => {
-    if(!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
-  const { data: allUsers, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
-
-  // 4. Combine listings with seller information
-  const listingsWithSellers = useMemo(() => {
-    if (!activeListings || !allUsers) return [];
-    return activeListings.map(listing => {
-      const seller = allUsers.find(u => u.id === listing.sellerId);
-      return { ...listing, seller };
-    });
-  }, [activeListings, allUsers]);
-
-  // 5. Get AI recommendations (or sort chronologically)
-  // This part is more complex to make fully reactive, so we might simplify or accept a slight delay.
-  // For now, let's stick to chronological sorting to ensure stability.
+  // 3. Sort listings chronologically
   const sortedListings: ListingWithSeller[] = useMemo(() => {
-    return [...listingsWithSellers].sort(
+    if (!activeListings) return [];
+    // The seller data is not available here anymore, which is fine for the card component.
+    return [...activeListings].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-  }, [listingsWithSellers]);
+  }, [activeListings]);
 
 
   const allTags = useMemo(() => {
@@ -63,7 +47,7 @@ export default function Home() {
   }, [allTags, userProfile]);
   
 
-  if (isFirestoreLoading || isLoadingListings || isLoadingUserProfile || isLoadingUsers) {
+  if (isFirestoreLoading || isLoadingListings || isLoadingUserProfile) {
     return (
         <div className="container mx-auto max-w-7xl px-4 py-8">
             <h1 className="mb-2 font-headline text-4xl font-bold tracking-tight">For You</h1>
