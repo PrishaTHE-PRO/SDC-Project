@@ -113,7 +113,8 @@ export default function MessagesPage() {
       }
     };
     processConversations();
-  }, [user, liveConversations, searchParams, firestore, isLoadingLiveConversations]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, liveConversations, firestore, isLoadingLiveConversations]);
 
   if (isUserLoading || isFirestoreLoading || isLoadingConversations || !user) {
     return (
@@ -141,12 +142,18 @@ export default function MessagesPage() {
       </div>
     );
   }
+  
+  const onConversationDeleted = (conversationId: string) => {
+    setConversations(prev => prev.filter(c => c.id !== conversationId));
+  };
+
 
   return (
      <div className="h-[calc(100vh-4rem)]">
         <ChatClient
           currentUser={user}
           conversations={conversations}
+          onConversationDeleted={onConversationDeleted}
         />
     </div>
   );

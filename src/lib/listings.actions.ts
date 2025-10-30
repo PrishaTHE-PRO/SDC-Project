@@ -42,3 +42,18 @@ export async function deleteListingAction(listingId: string) {
         return { success: false, message: error.message || 'Failed to delete listing.' };
     }
 }
+
+
+export async function deleteConversationAction(conversationId: string) {
+  // In a real app, you'd also check if the user is part of the conversation.
+  // This will be enforced by Firestore security rules.
+  try {
+    const conversationRef = doc(firestore, 'conversations', conversationId);
+    await deleteDoc(conversationRef);
+
+    revalidatePath('/messages');
+    return { success: true, message: 'Conversation deleted.' };
+  } catch (error: any) {
+    return { success: false, message: error.message || 'Failed to delete conversation.' };
+  }
+}

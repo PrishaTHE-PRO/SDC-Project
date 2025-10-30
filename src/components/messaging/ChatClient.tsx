@@ -2,25 +2,99 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import type { UserProfile, Listing, PopulatedConversation } from '@/lib/types';
+import type { UserProfile, Listing, PopulatedConversation, Message } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { SendHorizonal, ArrowLeft } from 'lucide-react';
+import { SendHorizonal, ArrowLeft, X, Loader2 } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, updateDoc, doc } from 'firebase/firestore';
+import { deleteConversationAction } from '@/lib/listings.actions';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChatClientProps {
   currentUser: FirebaseAuthUser;
   conversations: PopulatedConversation[];
+  onConversationDeleted: (conversationId: string) => void;
 }
 
-export function ChatClient({ currentUser, conversations }: ChatClientProps) {
+const ConversationItem = ({
+  convo,
+  onSelect,
+  isSelected,
+  currentUser,
+  onDelete,
+}: {
+  convo: PopulatedConversation,
+  onSelect: (id: string) => void,
+  isSelected: boolean,
+  currentUser: FirebaseAuthUser,
+  onDelete: (id: string) => Promise<void>
+}) => {
+  const { firestore } = useFirestore();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const messagesQuery = useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'conversations', convo.id, 'messages'), orderBy('createdAt', 'asc'));
+  }, [firestore, convo.id]);
+
+  const { data: messages, isLoading } = useCollection<Message>(messagesQuery);
+  
+  const getInitials = (name = '') => {
+    const names = name.split(' ');
+    if (names.length > 1) return names[0][0] + names[names.length - 1][0];
+    return name.substring(0, 2) || '?';
+  };
+
+  const handleDeleteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleting(true);
+    await onDelete(convo.id);
+    // isDeleting will remain true as the component unmounts
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => onSelect(convo.id)}
+        className={cn(
+          "flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-muted/50",
+          isSelected && 'bg-muted'
+        )}
+        disabled={isDeleting}
+      >
+        <Avatar className="h-12 w-12">
+          <AvatarImage src={convo.otherParticipant?.avatarUrl} />
+          <AvatarFallback>{getInitials(convo.otherParticipant?.name)}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 overflow-hidden">
+          <p className="font-semibold truncate">{convo.otherParticipant?.name}</p>
+          <p className="text-sm text-muted-foreground truncate">{convo.listing?.title}</p>
+        </div>
+      </button>
+      {!isLoading && messages?.length === 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full text-muted-foreground hover:text-destructive"
+            onClick={handleDeleteClick}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+          </Button>
+      )}
+    </div>
+  );
+};
+
+
+export function ChatClient({ currentUser, conversations, onConversationDeleted }: ChatClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [selectedConvoId, setSelectedConvoId] = useState<string | null>(null);
@@ -28,6 +102,7 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
   const [isMobileView, setIsMobileView] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { firestore, isLoading: isFirestoreLoading } = useFirestore();
+  const { toast } = useToast();
 
   useEffect(() => {
     // On initial load, select a conversation based on URL or default to the most recent.
@@ -48,7 +123,7 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
     }
   // We only want this effect to run once on initial load, so we have a limited dependency array.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversations, searchParams]);
+  }, [conversations]);
 
   const selectedConvo = conversations.find(c => c.id === selectedConvoId);
 
@@ -74,9 +149,9 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
   }, [messages]);
 
   useEffect(() => {
-    // When a conversation is selected, ensure the URL is clean
+    // When a conversation is selected and the URL has params, clean it.
     if (selectedConvoId && searchParams.has('listingId')) {
-      router.push('/messages', { scroll: false });
+      router.replace('/messages', { scroll: false });
     }
   }, [selectedConvoId, searchParams, router]);
 
@@ -110,6 +185,26 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
     setSelectedConvoId(convoId);
   }
 
+  const handleDeleteConversation = async (conversationId: string) => {
+    const result = await deleteConversationAction(conversationId);
+    if (result.success) {
+      toast({
+        title: 'Conversation removed',
+      });
+      onConversationDeleted(conversationId);
+      if (selectedConvoId === conversationId) {
+        setSelectedConvoId(null);
+      }
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: result.message || 'Could not remove conversation.',
+      });
+    }
+  };
+
+
   const showConversationList = !isMobileView || (isMobileView && !selectedConvoId);
   const showChatView = !isMobileView || (isMobileView && selectedConvoId);
 
@@ -122,23 +217,14 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
           </div>
           <ScrollArea className="h-[calc(100%-65px)]">
             {conversations.map((convo) => (
-              <button
+              <ConversationItem
                 key={convo.id}
-                onClick={() => handleSelectConversation(convo.id)}
-                className={cn(
-                  "flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-muted/50",
-                  selectedConvoId === convo.id && 'bg-muted'
-                )}
-              >
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={convo.otherParticipant?.avatarUrl} />
-                  <AvatarFallback>{getInitials(convo.otherParticipant?.name)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 overflow-hidden">
-                  <p className="font-semibold truncate">{convo.otherParticipant?.name}</p>
-                  <p className="text-sm text-muted-foreground truncate">{convo.listing?.title}</p>
-                </div>
-              </button>
+                convo={convo}
+                onSelect={handleSelectConversation}
+                isSelected={selectedConvoId === convo.id}
+                currentUser={currentUser}
+                onDelete={handleDeleteConversation}
+              />
             ))}
           </ScrollArea>
         </div>
