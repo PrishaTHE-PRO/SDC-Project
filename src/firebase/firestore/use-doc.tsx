@@ -1,7 +1,10 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { onSnapshot, type DocumentReference, type DocumentData } from 'firebase/firestore';
+import { errorEmitter } from '../error-emitter';
+import { FirestorePermissionError } from '../errors';
 
 function snapshotToData<T>(snapshot: DocumentData): T {
     if (!snapshot.exists()) {
@@ -45,7 +48,14 @@ export function useDoc<T>(ref: DocumentReference | null) {
         setError(null);
       },
       (err) => {
-        console.error("Error fetching document:", err);
+        // Create and emit the contextual error
+        const permissionError = new FirestorePermissionError({
+          path: ref.path,
+          operation: 'get',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        // Also set local error state for UI feedback if needed
         setError(err);
         setIsLoading(false);
         setData(null);

@@ -1,8 +1,10 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { onSnapshot, query, collection, type DocumentData, type Query, type CollectionReference } from 'firebase/firestore';
-import { useFirestore } from '../provider';
+import { onSnapshot, type DocumentData, type Query, type CollectionReference } from 'firebase/firestore';
+import { errorEmitter } from '../error-emitter';
+import { FirestorePermissionError } from '../errors';
 
 function snapshotToData<T>(snapshot: DocumentData): T {
     if (!snapshot.exists()) {
@@ -44,7 +46,14 @@ export function useCollection<T>(q: Query | CollectionReference | null) {
         setError(null);
       },
       (err) => {
-        console.error("Error fetching collection:", err);
+        // Create and emit the contextual error
+        const permissionError = new FirestorePermissionError({
+          path: 'path' in q ? q.path : 'Unknown', // q.path doesn't exist on Query, only on CollectionReference.
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        // Also set local error state for UI feedback if needed
         setError(err);
         setIsLoading(false);
         setData(null);

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -22,6 +23,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const categories = [
   "textbooks", "electronics", "furniture", "academics",
@@ -85,19 +88,30 @@ export function SignupForm() {
 
       await updateProfile(user, {
         displayName: values.name,
-        // You can add a default photoURL here if you have one
+        photoURL: `https://i.pravatar.cc/150?u=${user.uid}`,
       });
 
       // Create a user document in Firestore
       const userDocRef = doc(firestore, 'users', user.uid);
-      await setDoc(userDocRef, {
+      const userProfileData = {
         id: user.uid,
         name: values.name,
         email: values.email,
         avatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
         preferredCategories: values.preferredCategories,
-        viewedTags: [], // Start with an empty history
-      });
+        viewedTags: [],
+      };
+
+      // Use .catch() for permission error handling
+      setDoc(userDocRef, userProfileData)
+        .catch((serverError) => {
+          const permissionError = new FirestorePermissionError({
+            path: userDocRef.path,
+            operation: 'create',
+            requestResourceData: userProfileData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        });
       
       toast({
         title: 'Account Created!',
