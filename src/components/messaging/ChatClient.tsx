@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -12,7 +13,7 @@ import { SendHorizonal, ArrowLeft } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, updateDoc, doc } from 'firebase/firestore';
 
 interface ChatClientProps {
   currentUser: FirebaseAuthUser;
@@ -25,7 +26,7 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
   const [message, setMessage] = useState('');
   const [isMobileView, setIsMobileView] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const firestore = useFirestore();
+  const { firestore, isLoading: isFirestoreLoading } = useFirestore();
 
   useEffect(() => {
     const listingId = searchParams.get('listingId');
@@ -85,6 +86,12 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
       senderId: currentUser.uid,
       createdAt: serverTimestamp(),
     });
+
+    const convoRef = doc(firestore, 'conversations', selectedConvoId);
+    await updateDoc(convoRef, {
+        lastMessageAt: serverTimestamp(),
+    });
+
     setMessage('');
   };
 
@@ -186,8 +193,9 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Type a message..."
                     autoComplete="off"
+                    disabled={isFirestoreLoading}
                   />
-                  <Button type="submit" size="icon" disabled={!message.trim()}>
+                  <Button type="submit" size="icon" disabled={!message.trim() || isFirestoreLoading}>
                     <SendHorizonal className="h-5 w-5" />
                   </Button>
                 </form>
@@ -208,3 +216,5 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
     </div>
   );
 }
+
+    
