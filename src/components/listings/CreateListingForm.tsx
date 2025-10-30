@@ -27,6 +27,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import type { User as FirebaseAuthUser } from 'firebase/auth';
 
 const categories = [
   "textbooks", "electronics", "furniture", "academics",
@@ -49,10 +52,15 @@ const formSchema = z.object({
   }),
 });
 
-export default function CreateListingForm() {
+interface CreateListingFormProps {
+    user: FirebaseAuthUser;
+}
+
+export default function CreateListingForm({ user }: CreateListingFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,17 +74,40 @@ export default function CreateListingForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    console.log(values);
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    if (!firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Firestore is not available.' });
+        setIsLoading(false);
+        return;
+    }
 
-    toast({
-      title: 'Listing Created!',
-      description: 'Your item is now live on BadgerExchange.',
-    });
-    
-    router.push('/');
-    setIsLoading(false);
+    try {
+        const docRef = await addDoc(collection(firestore, 'listings'), {
+            ...values,
+            sellerId: user.uid,
+            createdAt: serverTimestamp(),
+            status: 'active',
+            // Mocking these for now, you might want a more robust solution
+            images: ['https://picsum.photos/seed/1/600/400'], 
+            views: 0,
+            lastViewedAt: serverTimestamp(),
+        });
+
+        toast({
+            title: 'Listing Created!',
+            description: 'Your item is now live on BadgerExchange.',
+        });
+        
+        router.push(`/listings/${docRef.id}`);
+
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Failed to create listing',
+            description: error.message,
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (

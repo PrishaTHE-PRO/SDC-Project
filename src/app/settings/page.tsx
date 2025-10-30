@@ -2,12 +2,12 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCurrentUser } from '@/hooks/use-current-user';
+import { useUser } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SettingsPage() {
-  const { user, isLoading } = useCurrentUser();
+  const { user, isLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {

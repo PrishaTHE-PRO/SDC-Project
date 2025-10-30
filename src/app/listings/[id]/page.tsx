@@ -1,8 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
-import { getListingById, getUserById } from '@/lib/data';
+import { notFound, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,56 +10,62 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import ListingActions from '@/components/listings/ListingActions';
 import { Tag } from 'lucide-react';
 import MessageSellerButton from '@/components/listings/MessageSellerButton';
-import { useEffect, useState } from 'react';
-import type { Listing, User } from '@/lib/types';
-import { useCurrentUser } from '@/hooks/use-current-user';
+import { useEffect, useState, useMemo } from 'react';
+import type { Listing, UserProfile } from '@/lib/types';
+import { useDoc, useFirestore, useUser } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
-  const { user: currentUser } = useCurrentUser();
-  const [listing, setListing] = useState<Listing | null>(null);
-  const [seller, setSeller] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const router = useRouter();
+  const { user: currentUser } = useUser();
+  const firestore = useFirestore();
   const listingId = params.id;
 
+  const listingRef = useMemo(() => {
+    if (!firestore || !listingId) return null;
+    return doc(firestore, 'listings', listingId);
+  }, [firestore, listingId]);
+
+  const { data: listing, isLoading: isListingLoading } = useDoc<Listing>(listingRef);
+
+  const sellerRef = useMemo(() => {
+    if (!firestore || !listing?.sellerId) return null;
+    return doc(firestore, 'users', listing.sellerId);
+  }, [firestore, listing]);
+
+  const { data: seller, isLoading: isSellerLoading } = useDoc<UserProfile>(sellerRef);
+
   useEffect(() => {
-    const fetchListingData = async () => {
-      setIsLoading(true);
-      const fetchedListing = await getListingById(listingId);
-      if (fetchedListing) {
-        setListing(fetchedListing);
-        const fetchedSeller = await getUserById(fetchedListing.sellerId);
-        if (fetchedSeller) {
-          setSeller(fetchedSeller);
-        }
-      } else {
-        notFound();
-      }
-      setIsLoading(false);
-    };
+    if (!isListingLoading && !listing) {
+      notFound();
+    }
+  }, [isListingLoading, listing]);
 
-    fetchListingData();
-  }, [listingId]);
-
-  if (isLoading || !listing) {
+  if (isListingLoading || isSellerLoading || !listing) {
     // You can add a loading skeleton here
     return <div className="container mx-auto max-w-6xl p-4 py-8 md:p-8">Loading...</div>;
   }
 
-  const isSeller = currentUser?.id === listing.sellerId;
+  const isSeller = currentUser?.uid === listing.sellerId;
 
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
   });
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
     if (!name) return '??';
     const names = name.split(' ');
     if (names.length > 1) {
       return names[0][0] + names[names.length - 1][0];
     }
     return name.substring(0, 2);
+  };
+
+  const handleMessageSeller = () => {
+    if (seller) {
+      router.push(`/messages?listingId=${listing.id}&sellerId=${seller.id}`);
+    }
   };
 
   return (
@@ -103,13 +108,12 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
               </p>
             </CardHeader>
             <CardContent>
-              {isSeller ? (
+              {currentUser && isSeller ? (
                 <ListingActions listingId={listing.id} isSold={listing.status === 'sold'} />
               ) : (
                 <MessageSellerButton 
-                  listingId={listing.id}
-                  sellerId={seller?.id}
-                  disabled={listing.status === 'sold'}
+                  onClick={handleMessageSeller}
+                  disabled={listing.status === 'sold' || !currentUser}
                 />
               )}
             </CardContent>

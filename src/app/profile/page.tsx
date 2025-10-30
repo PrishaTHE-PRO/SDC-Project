@@ -1,22 +1,36 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCurrentUser } from '@/hooks/use-current-user';
+import { useUser, useFirestore, useDoc } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { doc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
+
 
 export default function ProfilePage() {
-  const { user, isLoading } = useCurrentUser();
+  const { user: authUser, isLoading: isAuthLoading } = useUser();
   const router = useRouter();
+  const firestore = useFirestore();
+
+  const userProfileRef = useMemo(() => {
+    if (!firestore || !authUser) return null;
+    return doc(firestore, 'users', authUser.uid);
+  }, [firestore, authUser]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!isAuthLoading && !authUser) {
       router.push('/login?from=/profile');
     }
-  }, [isLoading, user, router]);
+  }, [isAuthLoading, authUser, router]);
+
+  const isLoading = isAuthLoading || isProfileLoading;
+  const user = userProfile;
 
   if (isLoading || !user) {
     return (

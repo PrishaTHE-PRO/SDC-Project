@@ -2,13 +2,13 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCurrentUser } from '@/hooks/use-current-user';
+import { useUser } from '@/firebase';
 import CreateListingForm from '@/components/listings/CreateListingForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function CreateListingPage() {
-  const { user, isLoading } = useCurrentUser();
+  const { user, isLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function CreateListingPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CreateListingForm />
+          <CreateListingForm user={user} />
         </CardContent>
       </Card>
     </div>

@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { signInAction } from '@/lib/auth.server';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useAuth } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -35,6 +36,7 @@ export function LoginForm() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { auth } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,31 +48,33 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    try {
-      const result = await signInAction(values.email);
-      if (result.success) {
+    if (!auth) {
         toast({
-          title: 'Login Successful',
-          description: "Welcome back!",
-        });
-        
-        const from = searchParams.get('from') || '/';
-        // We use router.push and then router.refresh to ensure the page reloads and gets the new user state from the server.
-        // This is important for the header to update.
-        router.push(from);
-        router.refresh();
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Login Failed',
-          description: result.message,
-        });
-      }
-    } catch (error) {
-       toast({
           variant: 'destructive',
           title: 'An error occurred',
-          description: 'Please try again later.',
+          description: 'Firebase auth is not available. Please try again later.',
+        });
+        setIsLoading(false);
+        return;
+    }
+    
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      
+      toast({
+        title: 'Login Successful',
+        description: "Welcome back!",
+      });
+      
+      const from = searchParams.get('from') || '/';
+      router.push(from);
+      router.refresh(); // Forces a server-side rerender of the layout to get new user state
+
+    } catch (error: any) {
+       toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: error.message || 'An unknown error occurred.',
         });
     } finally {
       setIsLoading(false);

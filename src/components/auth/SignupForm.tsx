@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -20,6 +19,9 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth, useFirestore } from '@/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 const categories = [
   "textbooks", "electronics", "furniture", "academics",
@@ -55,6 +57,8 @@ export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { auth } = useAuth();
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,21 +73,49 @@ export function SignupForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Mock signup logic
-    console.log("New user signup:", {
-      name: values.name,
-      email: values.email,
-      preferredCategories: values.preferredCategories
-    });
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: 'Account Created!',
-      description: "We've sent a verification link to your email.",
-    });
+    if (!auth || !firestore) {
+      toast({ variant: 'destructive', title: 'Firebase not initialized.' });
+      setIsLoading(false);
+      return;
+    }
 
-    router.push('/login');
-    setIsLoading(false);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      await updateProfile(user, {
+        displayName: values.name,
+        // You can add a default photoURL here if you have one
+      });
+
+      // Create a user document in Firestore
+      const userDocRef = doc(firestore, 'users', user.uid);
+      await setDoc(userDocRef, {
+        id: user.uid,
+        name: values.name,
+        email: values.email,
+        avatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+        preferredCategories: values.preferredCategories,
+        viewedTags: [], // Start with an empty history
+      });
+      
+      toast({
+        title: 'Account Created!',
+        description: "You're now logged in.",
+      });
+
+      router.push('/');
+      router.refresh();
+
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Sign Up Failed',
+        description: error.message || 'An unknown error occurred.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (

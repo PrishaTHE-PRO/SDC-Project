@@ -1,31 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCurrentUser } from '@/hooks/use-current-user';
-import { getConversationsForUser, getAllListings, getAllUsers, createOrGetConversation } from '@/lib/data';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { getConversationsForUser, createOrGetConversation, getListingById, getUserById } from '@/lib/data';
 import { ChatClient } from '@/components/messaging/ChatClient';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { User, Listing, Conversation } from '@/lib/types';
-
-type PopulatedConversation = {
-  id: string;
-  listing?: Listing;
-  otherParticipant?: User;
-  messages: {
-    id: string;
-    text: string;
-    senderId: string;
-    createdAt: string;
-  }[];
-};
+import type { UserProfile, Listing, PopulatedConversation } from '@/lib/types';
+import { collection, query, where } from 'firebase/firestore';
 
 export default function MessagesPage() {
-  const { user, isLoading: isUserLoading } = useCurrentUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const firestore = useFirestore();
   const [conversations, setConversations] = useState<PopulatedConversation[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+
+  const conversationsQuery = useMemo(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'conversations'), where('participantIds', 'array-contains', user.uid));
+  }, [firestore, user]);
+
+  const { data: liveConversations, isLoading: isLoadingLiveConversations } = useCollection(conversationsQuery);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -34,41 +31,46 @@ export default function MessagesPage() {
   }, [isUserLoading, user, router]);
 
   useEffect(() => {
-    const fetchConversations = async () => {
-      if (user) {
+    const processConversations = async () => {
+      if (user && liveConversations) {
         setIsLoadingConversations(true);
+        
         const listingId = searchParams.get('listingId');
         const sellerId = searchParams.get('sellerId');
-        
-        let userConversations = await getConversationsForUser(user.id);
 
-        if (typeof listingId === 'string' && typeof sellerId === 'string') {
-          const newOrExistingConvo = await createOrGetConversation(listingId, user.id, sellerId);
-          if (newOrExistingConvo && !userConversations.some(c => c.id === newOrExistingConvo.id)) {
-            userConversations.unshift(newOrExistingConvo);
-          }
+        let convosToProcess = liveConversations;
+
+        if (listingId && sellerId && user) {
+            const newOrExistingConvo = await createOrGetConversation(listingId, user.uid, sellerId);
+            if (newOrExistingConvo && !convosToProcess.some(c => c.id === newOrExistingConvo.id)) {
+              convosToProcess = [newOrExistingConvo, ...convosToProcess];
+            }
         }
-        
-        const listings = await getAllListings();
-        const users = await getAllUsers();
-        
-        const populated = userConversations.map(convo => {
-          const otherParticipantId = convo.participantIds.find(id => id !== user.id);
+
+        const populated = await Promise.all(convosToProcess.map(async (convo) => {
+          const otherParticipantId = convo.participantIds.find(id => id !== user.uid);
+          const [listing, otherParticipant] = await Promise.all([
+            getListingById(convo.listingId),
+            otherParticipantId ? getUserById(otherParticipantId) : Promise.resolve(undefined)
+          ]);
+
           return {
             ...convo,
-            listing: listings.find(l => l.id === convo.listingId),
-            otherParticipant: users.find(u => u.id === otherParticipantId),
+            listing,
+            otherParticipant,
           };
-        }).filter((c): c is PopulatedConversation => !!(c.listing && c.otherParticipant));
+        }));
+        
+        const validPopulated = populated.filter((c): c is PopulatedConversation => !!(c.listing && c.otherParticipant));
 
-        setConversations(populated);
+        setConversations(validPopulated);
         setIsLoadingConversations(false);
       }
     };
-    fetchConversations();
-  }, [user, searchParams]);
+    processConversations();
+  }, [user, liveConversations, searchParams, firestore]);
 
-  if (isUserLoading || isLoadingConversations || !user) {
+  if (isUserLoading || isLoadingConversations || isLoadingLiveConversations ||!user) {
     return (
       <div className="h-[calc(100vh-4rem)] flex border-t">
         <div className="w-full md:w-1/3 md:border-r">

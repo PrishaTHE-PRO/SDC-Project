@@ -1,32 +1,21 @@
-
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import type { User, Listing } from '@/lib/types';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import type { UserProfile, Listing, PopulatedConversation } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { SendHorizonal, ArrowLeft } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-
-type PopulatedConversation = {
-  id: string;
-  listing?: Listing;
-  otherParticipant?: User;
-  messages: {
-    id: string;
-    text: string;
-    senderId: string;
-    createdAt: string;
-  }[];
-};
+import type { User as FirebaseAuthUser } from 'firebase/auth';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
 interface ChatClientProps {
-  currentUser: User;
+  currentUser: FirebaseAuthUser;
   conversations: PopulatedConversation[];
 }
 
@@ -36,6 +25,7 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
   const [message, setMessage] = useState('');
   const [isMobileView, setIsMobileView] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const firestore = useFirestore();
 
   useEffect(() => {
     const listingId = searchParams.get('listingId');
@@ -45,17 +35,27 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
         setSelectedConvoId(convo.id);
       }
     } else if (conversations.length > 0 && !selectedConvoId) {
-       // If no conversation is selected via URL, select the most recent one.
-       // Sort by lastMessageAt to find the most recent.
        const sortedConversations = [...conversations].sort((a, b) => 
-         new Date(b.messages[b.messages.length - 1]?.createdAt || b.lastMessageAt).getTime() - 
-         new Date(a.messages[a.messages.length - 1]?.createdAt || a.lastMessageAt).getTime()
+         new Date(b.lastMessageAt).getTime() - 
+         new Date(a.lastMessageAt).getTime()
        );
        if (sortedConversations.length > 0) {
         setSelectedConvoId(sortedConversations[0].id);
        }
     }
   }, [conversations, searchParams, selectedConvoId]);
+
+  const selectedConvo = conversations.find(c => c.id === selectedConvoId);
+
+  const messagesQuery = useMemo(() => {
+    if (!firestore || !selectedConvoId) return null;
+    return query(
+      collection(firestore, 'conversations', selectedConvoId, 'messages'),
+      orderBy('createdAt', 'asc')
+    );
+  }, [firestore, selectedConvoId]);
+
+  const { data: messages, isLoading: isLoadingMessages } = useCollection(messagesQuery);
 
   useEffect(() => {
     const checkMobile = () => setIsMobileView(window.innerWidth < 768);
@@ -66,14 +66,26 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [selectedConvoId, conversations]);
+  }, [messages]);
 
-  const selectedConvo = conversations.find(c => c.id === selectedConvoId);
 
   const getInitials = (name = '') => {
     const names = name.split(' ');
     if (names.length > 1) return names[0][0] + names[names.length - 1][0];
     return name.substring(0, 2) || '?';
+  };
+  
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim() || !firestore || !selectedConvoId) return;
+
+    const messagesCol = collection(firestore, 'conversations', selectedConvoId, 'messages');
+    await addDoc(messagesCol, {
+      text: message,
+      senderId: currentUser.uid,
+      createdAt: serverTimestamp(),
+    });
+    setMessage('');
   };
 
   const showConversationList = !isMobileView || (isMobileView && !selectedConvoId);
@@ -137,19 +149,19 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
 
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
-                  {selectedConvo.messages.map((msg) => (
+                  {isLoadingMessages ? <p>Loading messages...</p> : messages?.map((msg) => (
                     <div
                       key={msg.id}
                       className={cn(
                         "flex items-end gap-2",
-                        msg.senderId === currentUser.id ? 'justify-end' : 'justify-start'
+                        msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'
                       )}
                     >
-                      {msg.senderId !== currentUser.id && <Avatar className="h-8 w-8"><AvatarImage src={selectedConvo.otherParticipant?.avatarUrl} /><AvatarFallback>{getInitials(selectedConvo.otherParticipant?.name)}</AvatarFallback></Avatar>}
+                      {msg.senderId !== currentUser.uid && <Avatar className="h-8 w-8"><AvatarImage src={selectedConvo.otherParticipant?.avatarUrl} /><AvatarFallback>{getInitials(selectedConvo.otherParticipant?.name)}</AvatarFallback></Avatar>}
                       <div
                         className={cn(
                           "max-w-xs rounded-lg px-4 py-2 md:max-w-md",
-                          msg.senderId === currentUser.id
+                          msg.senderId === currentUser.uid
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted'
                         )}
@@ -158,7 +170,7 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
                       </div>
                     </div>
                   ))}
-                  {selectedConvo.messages.length === 0 && (
+                  {!isLoadingMessages && messages?.length === 0 && (
                      <div className="text-center text-sm text-muted-foreground py-8">
                        Start the conversation about "{selectedConvo.listing?.title}".
                      </div>
@@ -168,7 +180,7 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
               </ScrollArea>
 
               <div className="border-t p-4">
-                <form className="flex items-center gap-2">
+                <form onSubmit={handleSendMessage} className="flex items-center gap-2">
                   <Input
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}

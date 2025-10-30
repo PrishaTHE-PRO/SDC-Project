@@ -1,8 +1,6 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -17,13 +15,11 @@ import {
 import { AlertTriangle, MessageSquare } from 'lucide-react';
 
 interface MessageSellerButtonProps {
-  listingId: string;
-  sellerId?: string;
+  onClick: () => void;
   disabled?: boolean;
 }
 
-export default function MessageSellerButton({ listingId, sellerId, disabled }: MessageSellerButtonProps) {
-  const router = useRouter();
+export default function MessageSellerButton({ onClick, disabled }: MessageSellerButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [canConfirm, setCanConfirm] = useState(false);
   const [countdown, setCountdown] = useState(3);
@@ -52,9 +48,7 @@ export default function MessageSellerButton({ listingId, sellerId, disabled }: M
 
   const handleContinue = () => {
     setIsDialogOpen(false);
-    if (sellerId) {
-      router.push(`/messages?listingId=${listingId}&sellerId=${sellerId}`);
-    }
+    onClick();
   };
 
   return (

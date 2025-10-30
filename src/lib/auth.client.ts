@@ -1,13 +1,4 @@
-'use client';
-import { signInAction, signOutAction } from './auth.server';
+// This file is no longer needed as authentication logic is now
+// handled directly in the components using the Firebase SDK.
 
-// These are client-side wrappers for our server actions.
-// This allows us to call them from client components.
-
-export async function signIn(email: string) {
-    return await signInAction(email);
-}
-
-export async function signOut() {
-    await signOutAction();
-}
+// You can delete this file or leave it empty.

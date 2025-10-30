@@ -6,10 +6,10 @@ import { UserNav } from '@/components/auth/UserNav';
 import { Logo } from '@/components/Logo';
 import { PlusCircle } from 'lucide-react';
 import { HeaderNav } from '@/components/layout/HeaderNav';
-import { useCurrentUser } from '@/hooks/use-current-user';
+import { useUser } from '@/firebase';
 
 export default function Header() {
-  const { user, isLoading } = useCurrentUser();
+  const { user, isLoading } = useUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

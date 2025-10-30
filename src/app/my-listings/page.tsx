@@ -1,19 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCurrentUser } from '@/hooks/use-current-user';
-import { getAllListings, getAllUsers } from '@/lib/data';
+import { useUser, useFirestore, useCollection } from '@/firebase';
 import ListingCard from '@/components/listings/ListingCard';
-import type { ListingWithSeller } from '@/lib/types';
+import type { Listing, UserProfile } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+
+type ListingWithSeller = Listing & { seller?: UserProfile };
 
 export default function MyListingsPage() {
-  const { user, isLoading: isUserLoading } = useCurrentUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
-  const [listingsWithSellers, setListingsWithSellers] = useState<ListingWithSeller[]>([]);
-  const [isLoadingListings, setIsLoadingListings] = useState(true);
+  const firestore = useFirestore();
+
+  const myListingsQuery = useMemo(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'listings'), where('sellerId', '==', user.uid));
+  }, [firestore, user]);
+
+  const { data: myListings, isLoading: isLoadingListings } = useCollection<Listing>(myListingsQuery);
+
+  const listingsWithSellers = useMemo(() => {
+    if (!myListings || !user) return [];
+    // Since these are the user's own listings, we can just attach their profile.
+    const sellerProfile: UserProfile = {
+        id: user.uid,
+        name: user.displayName || 'Anonymous',
+        email: user.email || '',
+        avatarUrl: user.photoURL || '',
+        preferredCategories: [], // This might need to be fetched separately if needed
+        viewedTags: [],
+    }
+    return myListings.map(listing => ({
+      ...listing,
+      seller: sellerProfile
+    }));
+  }, [myListings, user]);
+  
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -21,25 +47,6 @@ export default function MyListingsPage() {
     }
   }, [isUserLoading, user, router]);
 
-  useEffect(() => {
-    if (user) {
-      const fetchListings = async () => {
-        setIsLoadingListings(true);
-        const allListings = await getAllListings();
-        const allUsers = await getAllUsers();
-        
-        const myListings = allListings.filter(listing => listing.sellerId === user.id);
-
-        const populatedListings: ListingWithSeller[] = myListings.map(listing => ({
-          ...listing,
-          seller: allUsers.find(u => u.id === listing.sellerId)
-        }));
-        setListingsWithSellers(populatedListings);
-        setIsLoadingListings(false);
-      };
-      fetchListings();
-    }
-  }, [user]);
 
   if (isUserLoading || isLoadingListings || !user) {
     return (

@@ -1,5 +1,5 @@
 
-export interface User {
+export interface UserProfile {
   id: string;
   name: string;
   email: string;
@@ -16,19 +16,20 @@ export interface Listing {
   tags: string[];
   images: string[];
   sellerId: string;
-  createdAt: string;
+  createdAt: string; // Should be ISO string date
   views: number;
-  lastViewedAt: string;
+  lastViewedAt: string; // Should be ISO string date
   status: 'active' | 'sold';
+  condition: string;
 }
 
-export type ListingWithSeller = Listing & { seller?: User };
+export type ListingWithSeller = Listing & { seller?: UserProfile };
 
 export interface Message {
   id: string;
   text: string;
   senderId: string;
-  createdAt: string;
+  createdAt: string; // Should be ISO string date
 }
 
 export interface Conversation {
@@ -36,5 +37,10 @@ export interface Conversation {
   listingId: string;
   participantIds: string[];
   messages: Message[];
-  lastMessageAt: string;
+  lastMessageAt: string; // Should be ISO string date
 }
+
+export type PopulatedConversation = Omit<Conversation, 'messages'> & {
+  listing?: Listing;
+  otherParticipant?: UserProfile;
+};
