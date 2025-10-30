@@ -53,10 +53,10 @@ export function LoginForm() {
           title: 'Login Successful',
           description: "Welcome back!",
         });
-        // The server action's revalidatePath handles the refresh.
-        // We just need to navigate.
+        
         const from = searchParams.get('from') || '/';
         router.push(from);
+        router.refresh(); // This ensures the page reloads and gets the new user state from the server.
       } else {
         toast({
           variant: 'destructive',
