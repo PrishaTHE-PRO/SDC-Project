@@ -113,15 +113,16 @@ export function ChatClient({ currentUser, conversations, onConversationDeleted }
         setSelectedConvoId(convo.id);
       }
     } else if (conversations.length > 0 && !selectedConvoId) {
-       const sortedConversations = [...conversations].sort((a, b) => 
-         new Date(b.lastMessageAt).getTime() - 
-         new Date(a.lastMessageAt).getTime()
-       );
+       const sortedConversations = [...conversations].sort((a, b) => {
+        // Handle cases where lastMessageAt might be a server timestamp object or an ISO string
+        const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+        const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+        return timeB - timeA;
+       });
        if (sortedConversations.length > 0) {
         setSelectedConvoId(sortedConversations[0].id);
        }
     }
-  // We only want this effect to run once on initial load, so we have a limited dependency array.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversations]);
 
@@ -149,7 +150,7 @@ export function ChatClient({ currentUser, conversations, onConversationDeleted }
   }, [messages]);
 
   useEffect(() => {
-    // When a conversation is selected and the URL has params, clean it.
+    // When the selected conversation changes, clean the URL if needed.
     if (selectedConvoId && searchParams.has('listingId')) {
       router.replace('/messages', { scroll: false });
     }
@@ -193,7 +194,13 @@ export function ChatClient({ currentUser, conversations, onConversationDeleted }
       });
       onConversationDeleted(conversationId);
       if (selectedConvoId === conversationId) {
-        setSelectedConvoId(null);
+        const remainingConversations = conversations.filter(c => c.id !== conversationId);
+        if (remainingConversations.length > 0) {
+            const sorted = [...remainingConversations].sort((a,b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+            setSelectedConvoId(sorted[0].id);
+        } else {
+            setSelectedConvoId(null);
+        }
       }
     } else {
       toast({
@@ -288,6 +295,9 @@ export function ChatClient({ currentUser, conversations, onConversationDeleted }
               </ScrollArea>
 
               <div className="border-t p-4">
+                 <p className="text-center text-xs text-muted-foreground pb-2">
+                  Watch out for scams. Do not send payment until you have received the item.
+                </p>
                 <form onSubmit={handleSendMessage} className="flex items-center gap-2">
                   <Input
                     value={message}
