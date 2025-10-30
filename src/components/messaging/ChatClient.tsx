@@ -73,6 +73,13 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    // When a conversation is selected, ensure the URL is clean
+    if (selectedConvoId && searchParams.has('listingId')) {
+      router.push('/messages', { scroll: false });
+    }
+  }, [selectedConvoId, searchParams, router]);
+
 
   const getInitials = (name = '') => {
     const names = name.split(' ');
@@ -101,8 +108,6 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
 
   const handleSelectConversation = (convoId: string) => {
     setSelectedConvoId(convoId);
-    // Clean the URL so reloads don't jump back to the initial convo
-    router.push('/messages', { scroll: false });
   }
 
   const showConversationList = !isMobileView || (isMobileView && !selectedConvoId);
