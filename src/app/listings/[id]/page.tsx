@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,11 +15,12 @@ import type { Listing, UserProfile } from '@/lib/types';
 import { useDoc, useFirestore, useUser } from '@/firebase';
 import { doc } from 'firebase/firestore';
 
-export default function ListingDetailPage({ params }: { params: { id: string } }) {
+export default function ListingDetailPage() {
   const router = useRouter();
+  const params = useParams();
   const { user: currentUser } = useUser();
   const { firestore, isLoading: isFirestoreLoading } = useFirestore();
-  const listingId = params.id;
+  const listingId = params.id as string;
 
   const listingRef = useMemo(() => {
     if (!firestore || !listingId) return null;
