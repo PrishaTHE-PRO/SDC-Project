@@ -18,7 +18,7 @@ import { doc } from 'firebase/firestore';
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { user: currentUser } = useUser();
-  const firestore = useFirestore();
+  const { firestore, isLoading: isFirestoreLoading } = useFirestore();
   const listingId = params.id;
 
   const listingRef = useMemo(() => {
@@ -41,7 +41,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
     }
   }, [isListingLoading, listing]);
 
-  if (isListingLoading || isSellerLoading || !listing) {
+  if (isFirestoreLoading || isListingLoading || isSellerLoading || !listing) {
     // You can add a loading skeleton here
     return <div className="container mx-auto max-w-6xl p-4 py-8 md:p-8">Loading...</div>;
   }
@@ -63,7 +63,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   };
 
   const handleMessageSeller = () => {
-    if (seller) {
+    if (seller && listing) {
       router.push(`/messages?listingId=${listing.id}&sellerId=${seller.id}`);
     }
   };

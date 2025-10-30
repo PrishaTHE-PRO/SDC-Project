@@ -7,13 +7,13 @@ import { getConversationsForUser, createOrGetConversation, getListingById, getUs
 import { ChatClient } from '@/components/messaging/ChatClient';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { UserProfile, Listing, PopulatedConversation } from '@/lib/types';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, addDoc, serverTimestamp, doc } from 'firebase/firestore';
 
 export default function MessagesPage() {
   const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const firestore = useFirestore();
+  const { firestore, isLoading: isFirestoreLoading } = useFirestore();
   const [conversations, setConversations] = useState<PopulatedConversation[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
 
@@ -32,7 +32,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     const processConversations = async () => {
-      if (user && liveConversations) {
+      if (user && liveConversations && firestore) {
         setIsLoadingConversations(true);
         
         const listingId = searchParams.get('listingId');
@@ -41,7 +41,40 @@ export default function MessagesPage() {
         let convosToProcess = liveConversations;
 
         if (listingId && sellerId && user) {
-            const newOrExistingConvo = await createOrGetConversation(listingId, user.uid, sellerId);
+            const getListing = async (id: string): Promise<Listing | undefined> => {
+              if (!firestore) return undefined;
+              const snapshot = await getDoc(doc(firestore, 'listings', id));
+              return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } as Listing : undefined;
+            }
+            const getUser = async (id: string): Promise<UserProfile | undefined> => {
+                if (!firestore) return undefined;
+                const snapshot = await getDoc(doc(firestore, 'users', id));
+                return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } as UserProfile : undefined;
+            }
+
+            const participantIds = [user.uid, sellerId].sort();
+            const q = query(
+              collection(firestore, 'conversations'),
+              where('listingId', '==', listingId),
+              where('participantIds', '==', participantIds)
+            );
+            const snapshot = await getDocs(q);
+
+            let newOrExistingConvo;
+
+            if (!snapshot.empty) {
+                newOrExistingConvo = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            } else {
+                 const newConversationData = {
+                    listingId,
+                    participantIds,
+                    lastMessageAt: serverTimestamp(),
+                 };
+                 const docRef = await addDoc(collection(firestore, 'conversations'), newConversationData);
+                 const newDoc = await getDoc(docRef);
+                 newOrExistingConvo = { id: newDoc.id, ...newDoc.data() };
+            }
+
             if (newOrExistingConvo && !convosToProcess.some(c => c.id === newOrExistingConvo.id)) {
               convosToProcess = [newOrExistingConvo, ...convosToProcess];
             }
@@ -49,9 +82,21 @@ export default function MessagesPage() {
 
         const populated = await Promise.all(convosToProcess.map(async (convo) => {
           const otherParticipantId = convo.participantIds.find(id => id !== user.uid);
+          
+          const getListing = async (id: string): Promise<Listing | undefined> => {
+            if (!firestore) return undefined;
+            const snapshot = await getDoc(doc(firestore, 'listings', id));
+            return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } as Listing : undefined;
+          }
+          const getUser = async (id: string): Promise<UserProfile | undefined> => {
+              if (!firestore) return undefined;
+              const snapshot = await getDoc(doc(firestore, 'users', id));
+              return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } as UserProfile : undefined;
+          }
+
           const [listing, otherParticipant] = await Promise.all([
-            getListingById(convo.listingId),
-            otherParticipantId ? getUserById(otherParticipantId) : Promise.resolve(undefined)
+            getListing(convo.listingId),
+            otherParticipantId ? getUser(otherParticipantId) : Promise.resolve(undefined)
           ]);
 
           return {
@@ -70,7 +115,7 @@ export default function MessagesPage() {
     processConversations();
   }, [user, liveConversations, searchParams, firestore]);
 
-  if (isUserLoading || isLoadingConversations || isLoadingLiveConversations ||!user) {
+  if (isUserLoading || isFirestoreLoading || isLoadingConversations || isLoadingLiveConversations ||!user) {
     return (
       <div className="h-[calc(100vh-4rem)] flex border-t">
         <div className="w-full md:w-1/3 md:border-r">

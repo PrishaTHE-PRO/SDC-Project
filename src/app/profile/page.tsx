@@ -14,7 +14,7 @@ import type { UserProfile } from '@/lib/types';
 export default function ProfilePage() {
   const { user: authUser, isLoading: isAuthLoading } = useUser();
   const router = useRouter();
-  const firestore = useFirestore();
+  const { firestore, isLoading: isFirestoreLoading } = useFirestore();
 
   const userProfileRef = useMemo(() => {
     if (!firestore || !authUser) return null;
@@ -29,7 +29,7 @@ export default function ProfilePage() {
     }
   }, [isAuthLoading, authUser, router]);
 
-  const isLoading = isAuthLoading || isProfileLoading;
+  const isLoading = isAuthLoading || isFirestoreLoading || isProfileLoading;
   const user = userProfile;
 
   if (isLoading || !user) {

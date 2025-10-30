@@ -58,7 +58,7 @@ export function SignupForm() {
   const { toast } = useToast();
   const router = useRouter();
   const { auth } = useAuth();
-  const firestore = useFirestore();
+  const { firestore } = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

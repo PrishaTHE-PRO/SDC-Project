@@ -10,7 +10,7 @@ type ListingWithSeller = Listing & { seller?: UserProfile };
 
 export default function Home() {
   const { user: authUser } = useUser();
-  const firestore = useFirestore();
+  const { firestore, isLoading: isFirestoreLoading } = useFirestore();
 
   // 1. Fetch all active listings
   const listingsQuery = useMemo(() => {
@@ -63,7 +63,7 @@ export default function Home() {
   }, [allTags, userProfile]);
   
 
-  if (isLoadingListings || isLoadingUserProfile || isLoadingUsers) {
+  if (isFirestoreLoading || isLoadingListings || isLoadingUserProfile || isLoadingUsers) {
     return (
         <div className="container mx-auto max-w-7xl px-4 py-8">
             <h1 className="mb-2 font-headline text-4xl font-bold tracking-tight">For You</h1>

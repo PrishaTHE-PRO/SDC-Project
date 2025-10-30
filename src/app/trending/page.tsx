@@ -8,7 +8,7 @@ import { collection, query, where, orderBy } from 'firebase/firestore';
 type ListingWithSeller = Listing & { seller?: UserProfile };
 
 export default function TrendingPage() {
-  const firestore = useFirestore();
+  const { firestore, isLoading: isFirestoreLoading } = useFirestore();
 
   const listingsQuery = useMemo(() => {
     if (!firestore) return null;
@@ -34,7 +34,7 @@ export default function TrendingPage() {
     }));
   }, [trendingListings, users]);
   
-  if (isLoadingListings || isLoadingUsers) {
+  if (isFirestoreLoading || isLoadingListings || isLoadingUsers) {
       // Optional: Add a skeleton loader here
       return <div className="container mx-auto max-w-7xl px-4 py-8">Loading trending listings...</div>
   }

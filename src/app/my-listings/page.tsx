@@ -14,7 +14,7 @@ type ListingWithSeller = Listing & { seller?: UserProfile };
 export default function MyListingsPage() {
   const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
-  const firestore = useFirestore();
+  const { firestore, isLoading: isFirestoreLoading } = useFirestore();
 
   const myListingsQuery = useMemo(() => {
     if (!firestore || !user) return null;
@@ -48,7 +48,7 @@ export default function MyListingsPage() {
   }, [isUserLoading, user, router]);
 
 
-  if (isUserLoading || isLoadingListings || !user) {
+  if (isUserLoading || isFirestoreLoading || isLoadingListings || !user) {
     return (
        <div className="container mx-auto max-w-7xl px-4 py-8">
          <div className="mb-8">

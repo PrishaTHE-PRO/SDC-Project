@@ -60,7 +60,7 @@ export default function CreateListingForm({ user }: CreateListingFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
+  const { firestore } = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -84,12 +84,12 @@ export default function CreateListingForm({ user }: CreateListingFormProps) {
         const docRef = await addDoc(collection(firestore, 'listings'), {
             ...values,
             sellerId: user.uid,
-            createdAt: serverTimestamp(),
+            createdAt: new Date().toISOString(),
             status: 'active',
             // Mocking these for now, you might want a more robust solution
             images: ['https://picsum.photos/seed/1/600/400'], 
             views: 0,
-            lastViewedAt: serverTimestamp(),
+            lastViewedAt: new Date().toISOString(),
         });
 
         toast({

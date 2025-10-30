@@ -2,45 +2,43 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { markListingAsSold, deleteListingById } from './data';
-import { getAuthenticatedUser } from './auth';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase';
+
+// This is a server-side only initialization.
+const { firestore } = initializeFirebase();
+
 
 export async function markAsSoldAction(listingId: string) {
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return { success: false, message: 'Authentication required.' };
-  }
-  
   // In a real app, you'd also check if the user is the owner of the listing here.
-  
-  const success = await markListingAsSold(listingId);
-  
-  if (success) {
+  // This will be enforced by Firestore security rules.
+  try {
+    const listingRef = doc(firestore, 'listings', listingId);
+    await updateDoc(listingRef, { status: 'sold' });
+
     revalidatePath(`/listings/${listingId}`);
     revalidatePath('/my-listings');
     revalidatePath('/');
     revalidatePath('/trending');
     return { success: true, message: 'Listing marked as sold.' };
+  } catch (error: any) {
+    return { success: false, message: error.message || 'Failed to mark as sold.' };
   }
-  return { success: false, message: 'Failed to mark as sold.' };
 }
 
 export async function deleteListingAction(listingId: string) {
-    const user = await getAuthenticatedUser();
-    if (!user) {
-      return { success: false, message: 'Authentication required.' };
-    }
-
     // In a real app, you'd also check if the user is the owner of the listing here.
+    // This will be enforced by Firestore security rules.
+    try {
+        const listingRef = doc(firestore, 'listings', listingId);
+        await deleteDoc(listingRef);
 
-    const success = await deleteListingById(listingId);
-
-    if (success) {
         revalidatePath('/my-listings');
         revalidatePath('/');
         revalidatePath('/trending');
         // We don't revalidate the listing page itself, as it will be gone.
         return { success: true, message: 'Listing deleted.' };
+    } catch (error: any) {
+        return { success: false, message: error.message || 'Failed to delete listing.' };
     }
-    return { success: false, message: 'Failed to delete listing.' };
 }
