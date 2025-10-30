@@ -45,7 +45,12 @@ export default function MessagesPage() {
 
   useEffect(() => {
     const processConversations = async () => {
-      if (user && liveConversations && firestore) {
+      // Guard against running before firestore or initial conversations are ready.
+      if (!firestore || !user || isLoadingLiveConversations) {
+        return;
+      }
+
+      if (liveConversations) {
         setIsLoadingConversations(true);
         
         const listingId = searchParams.get('listingId');
@@ -110,7 +115,7 @@ export default function MessagesPage() {
     processConversations();
   }, [user, liveConversations, searchParams, firestore, isLoadingLiveConversations]);
 
-  if (isUserLoading || isFirestoreLoading || isLoadingConversations || isLoadingLiveConversations ||!user) {
+  if (isUserLoading || isFirestoreLoading || isLoadingConversations || !user) {
     return (
       <div className="h-[calc(100vh-4rem)] flex border-t">
         <div className="w-full md:w-1/3 md:border-r">
