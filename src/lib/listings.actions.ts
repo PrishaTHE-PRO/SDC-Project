@@ -3,10 +3,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase';
+import { initializeServerFirebase } from '@/firebase/server';
 
 // This is a server-side only initialization.
-const { firestore } = initializeFirebase();
+const { firestore } = initializeServerFirebase();
 
 
 export async function markAsSoldAction(listingId: string) {

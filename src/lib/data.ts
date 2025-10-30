@@ -13,11 +13,11 @@ import {
   Timestamp,
   orderBy,
 } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase';
+import { initializeServerFirebase } from '@/firebase/server';
 import type { UserProfile, Listing, Conversation, Message } from './types';
 
 // This is a server-side only initialization.
-const { firestore } = initializeFirebase();
+const { firestore } = initializeServerFirebase();
 
 function snapshotToData<T>(snapshot: DocumentData): T | undefined {
     if (!snapshot.exists()) {
