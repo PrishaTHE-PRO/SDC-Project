@@ -2,42 +2,49 @@
  * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset prioritizes a secure, owner-centric model for user data and
- * adopts a public-read, owner-write model for listings. Conversations are
- * restricted to participants, and messages inherit the security context
- * of their parent conversations.
+ * This ruleset prioritizes security and data ownership. Users can only
+ * read and write their own data, except for public listings.
  *
  * Data Structure:
- * - /users/{userId}: User profiles, accessible only to the owning user.
- * - /listings/{listingId}: Publicly readable listings, writable only by the owner.
- * - /conversations/{conversationId}: Conversation metadata, restricted to participants.
- * - /conversations/{conversationId}/messages/{messageId}: Messages within a conversation, inheriting conversation-level security.
+ * - /users/{userId}: Stores public user profiles. User documents are only accessible to the user themselves.
+ * - /listings/{listingId}: Stores publicly accessible item listings.
+ * - /conversations/{conversationId}: Stores conversation metadata between users about a listing. Access is restricted to conversation participants.
+ * - /conversations/{conversationId}/messages/{messageId}: Stores individual messages within a conversation. Access is restricted to conversation participants.
  *
  * Key Security Decisions:
- * - User listing is disallowed to prevent unauthorized data access.
- * - Public read access is granted for listings, but writes are strictly controlled by ownership.
- * - Conversations are secured using a "shared access" pattern, where participants are explicitly defined.
- * - The `participantIds` array on `conversations` is used to authorize access to messages.
+ * - Public Listings: Listings are readable by anyone, but only the seller can modify or delete them.
+ * - User Listing Disallowed: Listing all users is disallowed for privacy reasons.
+ * - Conversation Access: Access to conversations and their messages is limited to the participants.
+ *
+ * Denormalization for Authorization:
+ * The `Conversation` entity includes a `participantIds` array to enable efficient authorization checks
+ * for conversation access. This avoids costly queries to determine conversation membership.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Protects user profiles, ensuring only the owner can read or write their data.
+     * @description Controls access to user profiles.
      * @path /users/{userId}
-     * @allow (create, update, delete, get) - User with ID 'user123' can create/update/delete/get their own profile.
-     *   request.auth.uid == 'user123'
-     *   request.resource.data.id == 'user123'
-     * @deny (create, update, delete, get) - User with ID 'user456' cannot access user 'user123' profile.
-     *   request.auth.uid == 'user456'
-     * @principle Enforces document ownership for all operations on user profiles.
+     * @allow (create) - User with ID 'user123' can create their profile.
+     *    - request.auth.uid == 'user123'
+     *    - request.resource.data.id == 'user123'
+     * @allow (get) - User with ID 'user123' can read their profile.
+     *    - request.auth.uid == 'user123'
+     * @allow (update) - User with ID 'user123' can update their profile.
+     *    - request.auth.uid == 'user123'
+     * @allow (delete) - User with ID 'user123' can delete their profile.
+     *    - request.auth.uid == 'user123'
+     * @deny (create) - User with ID 'user456' cannot create profile with ID 'user123'.
+     *    - request.auth.uid == 'user456'
+     *    - request.resource.data.id == 'user123'
+     * @principle Enforces user-ownership: Only the authenticated user can access their own profile.
      */
     match /users/{userId} {
       function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
+        return request.auth.uid == userId;
       }
-
       function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
       }
@@ -51,58 +58,56 @@ service cloud.firestore {
     }
 
     /**
-     * @description Allows public reading of listings but restricts creation, updates, and deletion to the owner.
+     * @description Controls access to item listings.
      * @path /listings/{listingId}
-     * @allow (get, list) - Any user can read any listing.
+     * @allow (get) - Any user can retrieve a listing.
+     *    - true
+     * @allow (list) - Any user can list listings.
+     *    - true
      * @allow (create) - User with ID 'user123' can create a listing with sellerId 'user123'.
-     *   request.auth.uid == 'user123'
-     *   request.resource.data.sellerId == 'user123'
-     * @allow (update, delete) - User with ID 'user123' can update/delete a listing where resource.data.sellerId == 'user123'.
-     *   request.auth.uid == 'user123'
-     *   resource.data.sellerId == 'user123'
+     *    - request.auth.uid == 'user123'
+     *    - request.resource.data.sellerId == 'user123'
+     * @allow (update) - User with ID 'user123' can update their own listing with sellerId 'user123'.
+     *    - request.auth.uid == 'user123'
+     *    - resource.data.sellerId == 'user123'
+     * @allow (delete) - User with ID 'user123' can delete their own listing with sellerId 'user123'.
+     *    - request.auth.uid == 'user123'
+     *    - resource.data.sellerId == 'user123'
      * @deny (create) - User with ID 'user456' cannot create a listing with sellerId 'user123'.
-     *   request.auth.uid == 'user456'
-     *   request.resource.data.sellerId == 'user123'
-     * @deny (update, delete) - User with ID 'user456' cannot update/delete a listing where resource.data.sellerId == 'user123'.
-     *   request.auth.uid == 'user456'
-     *   resource.data.sellerId == 'user123'
-     * @principle Implements public-read, owner-write access control for listings.
+     *    - request.auth.uid == 'user456'
+     *    - request.resource.data.sellerId == 'user123'
+     * @principle Allows public read access but restricts write access to the listing's seller.
      */
     match /listings/{listingId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
       function isOwner(sellerId) {
-        return isSignedIn() && request.auth.uid == sellerId;
+        return request.auth.uid == sellerId;
       }
-
-      function isExistingOwner(sellerId) {
+       function isExistingOwner(sellerId) {
         return isOwner(sellerId) && resource != null;
       }
 
       allow get, list: if true;
-      allow create: if isSignedIn() && isOwner(request.resource.data.sellerId);
+      allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
       allow update: if isExistingOwner(resource.data.sellerId);
       allow delete: if isExistingOwner(resource.data.sellerId);
     }
 
     /**
-     * @description Secures conversations, allowing access only to participants.
+     * @description Controls access to conversations.
      * @path /conversations/{conversationId}
-     * @allow (get, list) - User with ID 'user123' can access a conversation if 'user123' is in the participantIds array.
-     *   request.auth.uid == 'user123'
-     *   'user123' in resource.data.participantIds
-     * @allow (create) - User with ID 'user123' can create a conversation if 'user123' is in the participantIds array of the request.
-     *   request.auth.uid == 'user123'
-     *   'user123' in request.resource.data.participantIds
-     * @allow (update, delete) - User with ID 'user123' can update/delete a conversation if 'user123' is in the participantIds array of the existing resource.
-     *   request.auth.uid == 'user123'
-     *   'user123' in resource.data.participantIds
-     * @deny (get, list) - User with ID 'user456' cannot access a conversation if 'user456' is NOT in the participantIds array.
-     *   request.auth.uid == 'user456'
-     *   'user456' in resource.data.participantIds
-     * @principle Enforces shared access based on the participantIds array.
+     * @allow (get) - User with ID 'user123' can get a conversation if they are a participant.
+     *    - request.auth.uid in resource.data.participantIds
+     * @allow (list) - User with ID 'user123' can list conversations if they are a participant.
+     *    - request.auth.uid in resource.data.participantIds
+     * @allow (create) - User with ID 'user123' can create a conversation if they are a participant.
+     *    - request.auth.uid in request.resource.data.participantIds
+     * @allow (update) - User with ID 'user123' can update a conversation if they are a participant.
+     *    - request.auth.uid in resource.data.participantIds
+     * @allow (delete) - User with ID 'user123' can delete a conversation if they are a participant.
+     *    - request.auth.uid in resource.data.participantIds
+     * @deny (get) - User with ID 'user456' cannot get conversation of user123.
+     *    - !(request.auth.uid in resource.data.participantIds)
+     * @principle Limits access to conversations to only the participants.
      */
     match /conversations/{conversationId} {
       function isSignedIn() {
@@ -110,53 +115,47 @@ service cloud.firestore {
       }
 
       function isParticipant() {
-        return isSignedIn() && request.auth.uid in resource.data.participantIds;
+        return request.auth.uid in resource.data.participantIds;
       }
-
-        function isParticipantRequest() {
-        return isSignedIn() && request.auth.uid in request.resource.data.participantIds;
+      function isExistingParticipant() {
+        return isParticipant() && resource != null;
       }
-
-        function isExistingParticipant() {
-        return isSignedIn() && resource != null && request.auth.uid in resource.data.participantIds;
-      }
-
-      allow get, list: if isExistingParticipant();
-      allow create: if isSignedIn() && isParticipantRequest();
+      allow get, list: if isParticipant();
+      allow create: if isSignedIn() && request.resource.data.participantIds.hasAny([request.auth.uid]);
       allow update: if isExistingParticipant();
       allow delete: if isExistingParticipant();
+
+      /**
+       * @description Controls access to messages within a conversation.
+       * @path /conversations/{conversationId}/messages/{messageId}
+       * @allow (get) - User with ID 'user123' can get a message if they are a participant in the parent conversation.
+       *    - get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid])
+       * @allow (list) - User with ID 'user123' can list messages if they are a participant in the parent conversation.
+       *    - get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid])
+       * @allow (create) - User with ID 'user123' can create a message if they are a participant in the parent conversation.
+       *    - get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid])
+       * @allow (update) - User with ID 'user123' can update a message if they are a participant in the parent conversation.
+       *    - get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid])
+       * @allow (delete) - User with ID 'user123' can delete a message if they are a participant in the parent conversation.
+       *    - get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid])
+       * @principle Restricts message access to participants of the parent conversation.
+       */
+      match /messages/{messageId} {
+        function isParticipant() {
+          return get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid]);
+        }
+         function isExistingParticipant() {
+          return isParticipant() && resource != null;
+        }
+
+        allow get, list: if isParticipant();
+        allow create: if isSignedIn() && isParticipant();
+        allow update: if isExistingParticipant();
+        allow delete: if isExistingParticipant();
+      }
     }
-
-    /**
-     * @description Restricts message access to participants of the parent conversation.
-     * @path /conversations/{conversationId}/messages/{messageId}
-     * @allow (get, list) - User with ID 'user123' can read messages in a conversation if 'user123' is in the participantIds array of the PARENT conversation.
-     *   request.auth.uid == 'user123'
-     *   'user123' in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds
-     * @allow (create) - User with ID 'user123' can create a message in a conversation if 'user123' is in the participantIds array of the PARENT conversation.
-     *   request.auth.uid == 'user123'
-     *   'user123' in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds
-     * @allow (update, delete) - User with ID 'user123' can update/delete a message in a conversation if 'user123' is in the participantIds array of the PARENT conversation.
-     *   request.auth.uid == 'user123'
-     *   'user123' in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds
-     * @deny (get, list) - User with ID 'user456' cannot read messages in a conversation if 'user456' is NOT in the participantIds array of the PARENT conversation.
-     *   request.auth.uid == 'user456'
-     *   'user456' in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds
-     * @principle Inherits conversation-level security for messages.
-     */
-    match /conversations/{conversationId}/messages/{messageId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isConversationParticipant(conversationId) {
-        return isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
-      }
-
-      allow get, list: if isConversationParticipant(conversationId);
-      allow create: if isConversationParticipant(conversationId);
-      allow update: if isConversationParticipant(conversationId);
-      allow delete: if isConversationParticipant(conversationId);
+    function isSignedIn() {
+      return request.auth != null;
     }
   }
 }
