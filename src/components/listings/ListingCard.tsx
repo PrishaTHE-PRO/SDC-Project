@@ -1,24 +1,17 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import type { ListingWithSeller } from '@/lib/types';
+import type { Listing, UserProfile } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { placeholderImages } from '@/lib/placeholder-images.json';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import type { UserProfile } from '@/lib/types';
 import { useMemo } from 'react';
 
 interface ListingCardProps {
-  listing: ListingWithSeller;
-}
-
-function getHint(imageUrl: string): string {
-  const image = placeholderImages.find(img => img.imageUrl === imageUrl);
-  return image?.imageHint || "listing image";
+  listing: Listing;
 }
 
 const getInitials = (name = '') => {
@@ -65,7 +58,6 @@ export default function ListingCard({ listing }: ListingCardProps) {
             fill
             className="object-cover"
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-            data-ai-hint={getHint(listing.images[0])}
           />
         </div>
       </Link>
