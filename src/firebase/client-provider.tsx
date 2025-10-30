@@ -1,3 +1,4 @@
+
 'use client';
 
 import { initializeFirebase } from '.';
@@ -10,7 +11,9 @@ export const FirebaseClientProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  // initializeFirebase now correctly returns the singleton instance.
   const { firebaseApp, auth, firestore } = initializeFirebase();
+  
   return (
     <FirebaseProvider
       firebaseApp={firebaseApp}

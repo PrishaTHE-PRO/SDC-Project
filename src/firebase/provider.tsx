@@ -5,8 +5,6 @@ import {
   createContext,
   useContext,
   ReactNode,
-  useState,
-  useEffect,
 } from 'react';
 import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
@@ -35,26 +33,15 @@ export const FirebaseProvider = ({
   auth: Auth | null;
   firestore: Firestore | null;
 }) => {
-  const [app, setApp] = useState<FirebaseApp | null>(firebaseApp);
-  const [authInstance, setAuthInstance] = useState<Auth | null>(auth);
-  const [firestoreInstance, setFirestoreInstance] = useState<Firestore | null>(
-    firestore
-  );
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setApp(firebaseApp);
-    setAuthInstance(auth);
-    setFirestoreInstance(firestore);
-    setIsLoading(false);
-  }, [firebaseApp, auth, firestore]);
+  // The loading state is now simpler: if we don't have an app, we're loading.
+  const isLoading = !firebaseApp;
 
   return (
     <FirebaseContext.Provider
       value={{
-        app,
-        auth: authInstance,
-        firestore: firestoreInstance,
+        app: firebaseApp,
+        auth: auth,
+        firestore: firestore,
         isLoading,
       }}
     >
