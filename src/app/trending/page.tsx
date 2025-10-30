@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import ListingCard from '@/components/listings/ListingCard';
 import { useCollection, useFirestore } from '@/firebase';
 import type { Listing } from '@/lib/types';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 
 export default function TrendingPage() {
   const { firestore, isLoading: isFirestoreLoading } = useFirestore();
@@ -12,12 +12,16 @@ export default function TrendingPage() {
     if (!firestore) return null;
     return query(
       collection(firestore, 'listings'),
-      where('status', '==', 'active'),
-      orderBy('lastViewedAt', 'desc')
+      where('status', '==', 'active')
     );
   }, [firestore]);
-  const { data: trendingListings, isLoading: isLoadingListings } = useCollection<Listing>(listingsQuery);
+  const { data: activeListings, isLoading: isLoadingListings } = useCollection<Listing>(listingsQuery);
   
+  const trendingListings = useMemo(() => {
+    if (!activeListings) return [];
+    return [...activeListings].sort((a, b) => new Date(b.lastViewedAt).getTime() - new Date(a.lastViewedAt).getTime());
+  }, [activeListings]);
+
   if (isFirestoreLoading || isLoadingListings) {
       // Optional: Add a skeleton loader here
       return <div className="container mx-auto max-w-7xl px-4 py-8">Loading trending listings...</div>
