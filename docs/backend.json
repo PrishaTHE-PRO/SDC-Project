@@ -1,0 +1,163 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the application.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The unique identifier for the user."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "avatarUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the user's avatar image."
+        },
+        "viewedTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of tags the user has viewed."
+        },
+        "preferredCategories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The user's preferred listing categories."
+        }
+      },
+      "required": ["id", "name", "email"]
+    },
+    "Listing": {
+      "title": "Listing",
+      "description": "An item listed for sale by a user.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The unique identifier for the listing."
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "sellerId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "sold"]
+        }
+      },
+      "required": ["id", "title", "price", "sellerId", "createdAt", "status"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "A message thread between two users about a listing.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "listingId": {
+          "type": "string"
+        },
+        "participantIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lastMessageAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "listingId", "participantIds", "lastMessageAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A single message within a conversation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "senderId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "text", "senderId", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Stores public profiles for all users."
+    },
+    "/listings/{listingId}": {
+      "schema": {
+        "$ref": "#/entities/Listing"
+      },
+      "description": "Stores all item listings."
+    },
+    "/conversations/{conversationId}": {
+      "schema": {
+        "$ref": "#/entities/Conversation"
+      },
+      "description": "Stores metadata for message conversations."
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/Message"
+      },
+      "description": "Sub-collection for messages within a conversation."
+    }
+  }
+}

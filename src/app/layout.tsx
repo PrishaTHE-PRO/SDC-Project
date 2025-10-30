@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/layout/Header';
 import { CurrentUserProvider } from '@/hooks/use-current-user';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'BadgerExchange',
@@ -33,13 +34,15 @@ export default async function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <CurrentUserProvider user={user}>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-          </div>
-          <Toaster />
-        </CurrentUserProvider>
+        <FirebaseClientProvider>
+          <CurrentUserProvider user={user}>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+            </div>
+            <Toaster />
+          </CurrentUserProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
