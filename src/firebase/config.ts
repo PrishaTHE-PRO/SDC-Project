@@ -7,4 +7,4 @@
 
 // Your web app's Firebase configuration
 // This is a public configuration and is safe to expose to the client.
-export const firebaseConfig = {"apiKey":"your-api-key","authDomain":"your-auth-domain","projectId":"your-project-id","storageBucket":"your-storage-bucket","messagingSenderId":"your-messaging-sender-id","appId":"your-app-id"};
+export const firebaseConfig = {"apiKey":"mock-api-key","authDomain":"mock-auth-domain","projectId":"mock-project-id","storageBucket":"mock-storage-bucket","messagingSenderId":"mock-messaging-sender-id","appId":"mock-app-id"};
