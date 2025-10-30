@@ -28,10 +28,10 @@ export const FirebaseClientProvider = ({
     setFirebase({ firebaseApp, auth, firestore });
   }, []);
 
-  if (!firebase.firebaseApp) {
-    // You can render a loading spinner here if you'd like.
-    // For now, we'll just return null to prevent the app from rendering
-    // before Firebase is ready.
+  if (!firebase.firebaseApp || !firebase.auth || !firebase.firestore) {
+    // Render nothing or a loading spinner until Firebase is fully initialized.
+    // This prevents any child components from trying to use Firebase services
+    // before they are ready.
     return null;
   }
   

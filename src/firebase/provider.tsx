@@ -32,8 +32,8 @@ export const FirebaseProvider = ({
   auth: Auth | null;
   firestore: Firestore | null;
 }) => {
-  // The loading state is now simpler: if we don't have an app, we're loading.
-  const isLoading = !firebaseApp;
+  // isLoading is true if any of the core Firebase services are not yet available.
+  const isLoading = !firebaseApp || !auth || !firestore;
 
   return (
     <FirebaseContext.Provider

@@ -6,7 +6,6 @@ import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 
-// This function can now be simpler, as the client provider will manage the instance.
 export function initializeFirebase(): {
   firebaseApp: FirebaseApp,
   auth: Auth,
