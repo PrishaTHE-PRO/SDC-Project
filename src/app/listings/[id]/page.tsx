@@ -14,6 +14,7 @@ import { useEffect, useState, useMemo } from 'react';
 import type { Listing, UserProfile } from '@/lib/types';
 import { useDoc, useFirestore, useUser } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export default function ListingDetailPage() {
   const router = useRouter();
@@ -53,6 +54,14 @@ export default function ListingDetailPage() {
     style: 'currency',
     currency: 'USD',
   });
+  
+  const conditionDisplay: {[key: string]: string} = {
+    'new': 'New',
+    'like-new': 'Like New',
+    'excellent': 'Excellent',
+    'good': 'Good',
+    'fair': 'Fair'
+  }
 
   const getInitials = (name?: string) => {
     if (!name) return '??';
@@ -101,10 +110,13 @@ export default function ListingDetailPage() {
         <div className="flex flex-col space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="font-headline text-3xl font-bold tracking-tighter">
-                {listing.title}
-              </CardTitle>
-              <p className="text-4xl font-bold text-primary">
+               <div className="flex items-start justify-between gap-4">
+                  <CardTitle className="font-headline text-3xl font-bold tracking-tighter">
+                    {listing.title}
+                  </CardTitle>
+                  <Badge variant="outline" className="capitalize text-nowrap mt-1">{conditionDisplay[listing.condition] || listing.condition}</Badge>
+              </div>
+              <p className="text-4xl font-bold text-primary pt-2">
                 {formatter.format(listing.price)}
               </p>
             </CardHeader>
