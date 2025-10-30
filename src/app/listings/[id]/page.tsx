@@ -10,11 +10,10 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import ListingActions from '@/components/listings/ListingActions';
 import { Tag } from 'lucide-react';
 import MessageSellerButton from '@/components/listings/MessageSellerButton';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { Listing, UserProfile } from '@/lib/types';
 import { useDoc, useFirestore, useUser } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
 
 export default function ListingDetailPage() {
   const router = useRouter();
@@ -129,7 +128,9 @@ export default function ListingDetailPage() {
               ) : (
                 <MessageSellerButton 
                   onClick={handleMessageSeller}
-                  disabled={listing.status === 'sold' || !currentUser}
+                  isLoggedIn={!!currentUser}
+                  listingId={listingId}
+                  disabled={listing.status === 'sold'}
                 />
               )}
             </CardContent>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -16,10 +17,13 @@ import { AlertTriangle, MessageSquare } from 'lucide-react';
 
 interface MessageSellerButtonProps {
   onClick: () => void;
+  isLoggedIn: boolean;
+  listingId: string;
   disabled?: boolean;
 }
 
-export default function MessageSellerButton({ onClick, disabled }: MessageSellerButtonProps) {
+export default function MessageSellerButton({ onClick, isLoggedIn, listingId, disabled }: MessageSellerButtonProps) {
+  const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [canConfirm, setCanConfirm] = useState(false);
   const [countdown, setCountdown] = useState(3);
@@ -50,6 +54,19 @@ export default function MessageSellerButton({ onClick, disabled }: MessageSeller
     setIsDialogOpen(false);
     onClick();
   };
+
+  const handleLogin = () => {
+    router.push(`/login?from=/listings/${listingId}`);
+  };
+  
+  if (!isLoggedIn) {
+      return (
+        <Button size="lg" className="w-full" onClick={handleLogin}>
+          <MessageSquare className="mr-2 h-5 w-5" />
+          Log in to message seller
+        </Button>
+      )
+  }
 
   return (
     <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
