@@ -1,10 +1,10 @@
 'use client';
 import { useMemo } from 'react';
-import { getRecommendations } from '@/ai/flows/personalized-listing-feed';
 import ListingFeedClient from '@/components/listings/ListingFeedClient';
 import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
 import type { Listing, UserProfile } from '@/lib/types';
 import { collection, query, where, doc } from 'firebase/firestore';
+import CategoryRow from '@/components/listings/CategoryRow';
 
 type ListingWithSeller = Listing & { seller?: UserProfile };
 
@@ -26,25 +26,51 @@ export default function Home() {
   }, [firestore, authUser]);
   const { data: userProfile, isLoading: isLoadingUserProfile } = useDoc<UserProfile>(userProfileRef);
 
-  // 3. Sort listings chronologically
-  const sortedListings: ListingWithSeller[] = useMemo(() => {
-    if (!activeListings) return [];
-    // The seller data is not available here anymore, which is fine for the card component.
-    return [...activeListings].sort(
+  // 3. Sort listings and separate them by category
+  const { preferredCategoryListings, remainingListings, allCategoriesForFeed } = useMemo(() => {
+    if (!activeListings) {
+      return { preferredCategoryListings: [], remainingListings: [], allCategoriesForFeed: [] };
+    }
+
+    const sorted = [...activeListings].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-  }, [activeListings]);
 
-
-  const allTags = useMemo(() => {
-    return [...new Set(activeListings?.flatMap(l => l.tags) || [])];
-  }, [activeListings]);
-
-  const categories = useMemo(() => {
     const preferredCategories = userProfile?.preferredCategories || [];
-    const otherCategories = allTags.filter(c => !preferredCategories.includes(c));
-    return [...preferredCategories, ...otherCategories];
-  }, [allTags, userProfile]);
+    const preferredCategoryMap = new Map<string, Listing[]>();
+    const remaining: Listing[] = [];
+    const preferredListingIds = new Set<string>();
+
+    // Initialize map for preferred categories
+    preferredCategories.forEach(cat => preferredCategoryMap.set(cat, []));
+
+    // Populate the map and remaining listings
+    for (const listing of sorted) {
+      let inPreferred = false;
+      for (const tag of listing.tags) {
+        if (preferredCategoryMap.has(tag)) {
+          preferredCategoryMap.get(tag)!.push(listing);
+          inPreferred = true;
+          preferredListingIds.add(listing.id);
+        }
+      }
+    }
+
+    const finalRemainingListings = sorted.filter(l => !preferredListingIds.has(l.id));
+
+    const allTags = [...new Set(finalRemainingListings.flatMap(l => l.tags) || [])];
+    const feedCategories = allTags.filter(c => !preferredCategories.includes(c));
+
+
+    return { 
+      preferredCategoryListings: Array.from(preferredCategoryMap.entries())
+                                        .map(([category, listings]) => ({ category, listings }))
+                                        .filter(group => group.listings.length > 0),
+      remainingListings: finalRemainingListings,
+      allCategoriesForFeed: feedCategories
+    };
+
+  }, [activeListings, userProfile]);
   
 
   if (isFirestoreLoading || isLoadingListings || isLoadingUserProfile) {
@@ -58,11 +84,17 @@ export default function Home() {
   }
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
-      <h1 className="mb-2 font-headline text-4xl font-bold tracking-tight">For You</h1>
-      <p className="mb-6 text-lg text-muted-foreground">Buy and sell from verified UW-Madison students</p>
+    <div className="container mx-auto max-w-7xl px-4 py-8 space-y-12">
+      <div>
+        <h1 className="mb-2 font-headline text-4xl font-bold tracking-tight">For You</h1>
+        <p className="mb-6 text-lg text-muted-foreground">Buy and sell from verified UW-Madison students</p>
+      </div>
+
+      {preferredCategoryListings.map(({ category, listings }) => (
+        <CategoryRow key={category} title={category} listings={listings} />
+      ))}
       
-      <ListingFeedClient listings={sortedListings} categories={categories} />
+      <ListingFeedClient listings={remainingListings} categories={allCategoriesForFeed} />
     </div>
   );
 }
