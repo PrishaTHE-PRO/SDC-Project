@@ -28,16 +28,11 @@ export default function CategoryRow({ title, listings }: CategoryRowProps) {
         </Button>
       </div>
       <div className="relative">
-        <ScrollArea>
-          <div className="flex space-x-4 pb-4">
-            {listings.slice(0, 10).map(listing => (
-              <div key={listing.id} className="w-64">
-                <ListingCard listing={listing} />
-              </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {listings.slice(0, 5).map(listing => (
+              <ListingCard key={listing.id} listing={listing} />
             ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        </div>
       </div>
     </div>
   );
