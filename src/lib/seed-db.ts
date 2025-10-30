@@ -1,6 +1,6 @@
 
 import { initializeFirebase } from '../firebase/index';
-import { collection, writeBatch } from 'firebase/firestore';
+import { collection, writeBatch, doc } from 'firebase/firestore';
 import placeholderImages from './placeholder-images.json';
 
 const { firestore } = initializeFirebase();
@@ -207,6 +207,11 @@ const sampleListings = [
 async function seedDatabase() {
   console.log('Starting to seed database...');
 
+  if (!firestore) {
+    console.error('Firestore is not initialized. Exiting seed script.');
+    return;
+  }
+
   try {
     const batch = writeBatch(firestore);
 
@@ -214,7 +219,7 @@ async function seedDatabase() {
     const usersCollection = collection(firestore, 'users');
     sampleUsers.forEach(user => {
       const { id, ...userData } = user;
-      const docRef = collection(usersCollection).doc(id);
+      const docRef = doc(usersCollection, id);
       batch.set(docRef, userData);
     });
     console.log(`Prepared ${sampleUsers.length} users for batch write.`);
@@ -223,7 +228,7 @@ async function seedDatabase() {
     const listingsCollection = collection(firestore, 'listings');
     sampleListings.forEach(listing => {
       const { id, ...listingData } = listing;
-      const docRef = collection(listingsCollection).doc(id);
+      const docRef = doc(listingsCollection, id);
       batch.set(docRef, listingData);
     });
     console.log(`Prepared ${sampleListings.length} listings for batch write.`);
