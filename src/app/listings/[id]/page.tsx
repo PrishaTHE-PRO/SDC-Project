@@ -114,11 +114,14 @@ export default function ListingDetailPage() {
                   <CardTitle className="font-headline text-3xl font-bold tracking-tighter">
                     {listing.title}
                   </CardTitle>
-                  <Badge variant="outline" className="capitalize text-nowrap mt-1">{conditionDisplay[listing.condition] || listing.condition}</Badge>
               </div>
               <p className="text-4xl font-bold text-primary pt-2">
                 {formatter.format(listing.price)}
               </p>
+              <div className="flex items-center gap-2 pt-2 text-sm">
+                <span className="text-muted-foreground">Condition:</span>
+                <span className="font-medium capitalize">{conditionDisplay[listing.condition] || listing.condition}</span>
+              </div>
             </CardHeader>
             <CardContent>
               {currentUser && isSeller ? (
