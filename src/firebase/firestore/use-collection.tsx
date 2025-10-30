@@ -48,7 +48,7 @@ export function useCollection<T>(q: Query | CollectionReference | null) {
       (err) => {
         // Create and emit the contextual error
         const permissionError = new FirestorePermissionError({
-          path: 'path' in q ? q.path : 'Unknown', // q.path doesn't exist on Query, only on CollectionReference.
+          path: 'path' in q ? q.path : 'Query (path not available)',
           operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);
