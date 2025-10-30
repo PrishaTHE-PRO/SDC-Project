@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth } from '@/firebase';
+import { signInWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { useFirebaseApp } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -36,7 +36,7 @@ export function LoginForm() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { auth } = useAuth();
+  const { app: firebaseApp } = useFirebaseApp();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,17 +48,18 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    if (!auth) {
+    if (!firebaseApp) {
         toast({
           variant: 'destructive',
           title: 'An error occurred',
-          description: 'Firebase auth is not available. Please try again later.',
+          description: 'Firebase is not available. Please try again later.',
         });
         setIsLoading(false);
         return;
     }
     
     try {
+      const auth = getAuth(firebaseApp);
       await signInWithEmailAndPassword(auth, values.email, values.password);
       
       toast({

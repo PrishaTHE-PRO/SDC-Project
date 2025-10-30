@@ -20,8 +20,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAuth, useFirestore } from '@/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { useFirebaseApp, useFirestore } from '@/firebase';
+import { createUserWithEmailAndPassword, updateProfile, getAuth } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -60,7 +60,7 @@ export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const { auth } = useAuth();
+  const { app: firebaseApp } = useFirebaseApp();
   const { firestore } = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -76,13 +76,14 @@ export function SignupForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    if (!auth || !firestore) {
+    if (!firebaseApp || !firestore) {
       toast({ variant: 'destructive', title: 'Firebase not initialized.' });
       setIsLoading(false);
       return;
     }
 
     try {
+      const auth = getAuth(firebaseApp);
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 

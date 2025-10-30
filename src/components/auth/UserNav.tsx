@@ -12,8 +12,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
-import { useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
+import { useFirebaseApp } from '@/firebase';
+import { signOut, getAuth } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -23,10 +23,11 @@ interface UserNavProps {
 
 export function UserNav({ user }: UserNavProps) {
   const router = useRouter();
-  const { auth } = useAuth();
+  const { app: firebaseApp } = useFirebaseApp();
 
   const handleSignOut = async () => {
-    if (auth) {
+    if (firebaseApp) {
+      const auth = getAuth(firebaseApp);
       await signOut(auth);
       router.push('/');
       router.refresh();
