@@ -72,10 +72,17 @@ export function LoginForm() {
       router.refresh(); // Forces a server-side rerender of the layout to get new user state
 
     } catch (error: any) {
+      let description = 'An unknown error occurred.';
+      if (error.code === 'auth/invalid-credential') {
+        description = 'Either you have entered an incorrect password, or you do not have an account associated with this email address.';
+      } else if (error.message) {
+        description = error.message;
+      }
+      
        toast({
           variant: 'destructive',
           title: 'Login Failed',
-          description: error.message || 'An unknown error occurred.',
+          description,
         });
     } finally {
       setIsLoading(false);
@@ -90,7 +97,7 @@ export function LoginForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Wisc Email</FormLabel>
+              <FormLabel>Student Email</FormLabel>
               <FormControl>
                 <Input placeholder="your-net-id@wisc.edu" {...field} />
               </FormControl>
