@@ -5,14 +5,24 @@ import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 
+let app: FirebaseApp;
+let auth: Auth;
+let firestore: Firestore;
+
 export function initializeFirebase(): {
   firebaseApp: FirebaseApp,
   auth: Auth,
   firestore: Firestore,
 } {
-  const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  const auth = getAuth(app);
-  const firestore = getFirestore(app);
+  if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+firestore = getFirestore(app);
+  } else {
+    app = getApp();
+    auth = getAuth(app);
+    firestore = getFirestore(app);
+  }
 
   return { firebaseApp: app, auth, firestore };
 }
