@@ -55,8 +55,10 @@ export function LoginForm() {
         });
         
         const from = searchParams.get('from') || '/';
+        // We use router.push and then router.refresh to ensure the page reloads and gets the new user state from the server.
+        // This is important for the header to update.
         router.push(from);
-        router.refresh(); // This ensures the page reloads and gets the new user state from the server.
+        router.refresh();
       } else {
         toast({
           variant: 'destructive',
