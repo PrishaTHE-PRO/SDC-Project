@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { SendHorizonal, ArrowLeft } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, updateDoc, doc } from 'firebase/firestore';
@@ -22,6 +22,7 @@ interface ChatClientProps {
 
 export function ChatClient({ currentUser, conversations }: ChatClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [selectedConvoId, setSelectedConvoId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [isMobileView, setIsMobileView] = useState(false);
@@ -29,6 +30,7 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
   const { firestore, isLoading: isFirestoreLoading } = useFirestore();
 
   useEffect(() => {
+    // On initial load, select a conversation based on URL or default to the most recent.
     const listingId = searchParams.get('listingId');
     if (listingId) {
       const convo = conversations.find(c => c.listing?.id === listingId);
@@ -44,7 +46,9 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
         setSelectedConvoId(sortedConversations[0].id);
        }
     }
-  }, [conversations, searchParams, selectedConvoId]);
+  // We only want this effect to run once on initial load, so we have a limited dependency array.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations, searchParams]);
 
   const selectedConvo = conversations.find(c => c.id === selectedConvoId);
 
@@ -95,6 +99,12 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
     setMessage('');
   };
 
+  const handleSelectConversation = (convoId: string) => {
+    setSelectedConvoId(convoId);
+    // Clean the URL so reloads don't jump back to the initial convo
+    router.push('/messages', { scroll: false });
+  }
+
   const showConversationList = !isMobileView || (isMobileView && !selectedConvoId);
   const showChatView = !isMobileView || (isMobileView && selectedConvoId);
 
@@ -109,7 +119,7 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
             {conversations.map((convo) => (
               <button
                 key={convo.id}
-                onClick={() => setSelectedConvoId(convo.id)}
+                onClick={() => handleSelectConversation(convo.id)}
                 className={cn(
                   "flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-muted/50",
                   selectedConvoId === convo.id && 'bg-muted'
@@ -216,5 +226,3 @@ export function ChatClient({ currentUser, conversations }: ChatClientProps) {
     </div>
   );
 }
-
-    
