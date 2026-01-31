@@ -24,7 +24,9 @@ const PersonalizedFeedOutputSchema = z.object({
 });
 export type PersonalizedFeedOutput = z.infer<typeof PersonalizedFeedOutputSchema>;
 
-async function getRecommendations(input: PersonalizedFeedInput): Promise<PersonalizedFeedOutput> {
+export async function getRecommendations(
+  input: PersonalizedFeedInput
+): Promise<PersonalizedFeedOutput> {
   return personalizedListingFeedFlow(input);
 }
 
@@ -59,4 +61,4 @@ const personalizedListingFeedFlow = ai.defineFlow(
   }
 );
 
-export {getRecommendations, PersonalizedFeedInput, PersonalizedFeedOutput};
+export type {PersonalizedFeedInput, PersonalizedFeedOutput};
